@@ -135,8 +135,8 @@ export default function MoodScale() {
               className={`
                 mood-scale-item cursor-pointer transition-all p-4 rounded-lg border
                 ${selectedLevel === level.level 
-                  ? "border-2 border-primary bg-primary/10" 
-                  : "border-border hover:bg-primary/5"
+                  ? "border-2 border-blue-500 bg-blue-100" 
+                  : "border-border hover:bg-gray-50"
                 }
                 ${level.category === 'depression' ? 'bg-red-50 border-red-200 hover:bg-red-100' :
                   level.category === 'normal' ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' :

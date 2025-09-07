@@ -191,15 +191,15 @@
   }
 
   .abc-section.activating {
-    @apply bg-primary/10 border-primary/30;
+    @apply bg-blue-100 border-blue-300;
   }
 
   .abc-section.beliefs {
-    @apply bg-secondary/10 border-secondary/30;
+    @apply bg-slate-100 border-slate-300;
   }
 
   .abc-section.consequences {
-    @apply bg-accent/10 border-accent/30;
+    @apply bg-green-100 border-green-300;
   }
 
   /* Progress indicators */

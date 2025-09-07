@@ -168,7 +168,7 @@ Behavior: What did you do?"
         </div>
         <Button 
           variant="outline"
-          className="bg-secondary/10 text-secondary hover:bg-secondary/20"
+          className="bg-slate-100 text-slate-600 hover:bg-slate-200"
           data-testid="button-share-therapist"
         >
           <Share className="h-4 w-4 mr-2" />
