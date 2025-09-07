@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210, 20%, 98%);
+  --foreground: hsl(210, 40%, 8%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 40%, 8%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 40%, 8%);
+  --primary: hsl(210, 70%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(185, 60%, 65%);
+  --secondary-foreground: hsl(210, 40%, 8%);
+  --muted: hsl(210, 20%, 95%);
+  --muted-foreground: hsl(210, 25%, 45%);
+  --accent: hsl(100, 50%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 85%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 20%, 82%);
+  --input: hsl(210, 20%, 95%);
+  --ring: hsl(210, 70%, 60%);
+  --chart-1: hsl(210, 70%, 60%);
+  --chart-2: hsl(185, 60%, 65%);
+  --chart-3: hsl(100, 50%, 60%);
+  --chart-4: hsl(45, 85%, 55%);
+  --chart-5: hsl(330, 75%, 65%);
+  --sidebar: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(210, 40%, 8%);
+  --sidebar-primary: hsl(210, 70%, 60%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 20%, 95%);
+  --sidebar-accent-foreground: hsl(210, 70%, 60%);
+  --sidebar-border: hsl(210, 20%, 82%);
+  --sidebar-ring: hsl(210, 70%, 60%);
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(210, 40%, 8%);
+  --foreground: hsl(210, 20%, 98%);
+  --card: hsl(210, 40%, 12%);
+  --card-foreground: hsl(210, 20%, 98%);
+  --popover: hsl(210, 40%, 12%);
+  --popover-foreground: hsl(210, 20%, 98%);
+  --primary: hsl(210, 70%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(185, 60%, 65%);
+  --secondary-foreground: hsl(210, 40%, 8%);
+  --muted: hsl(210, 40%, 15%);
+  --muted-foreground: hsl(210, 25%, 65%);
+  --accent: hsl(100, 50%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 85%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 40%, 18%);
+  --input: hsl(210, 40%, 15%);
+  --ring: hsl(210, 70%, 60%);
+  --chart-1: hsl(210, 70%, 60%);
+  --chart-2: hsl(185, 60%, 65%);
+  --chart-3: hsl(100, 50%, 60%);
+  --chart-4: hsl(45, 85%, 55%);
+  --chart-5: hsl(330, 75%, 65%);
+  --sidebar: hsl(210, 40%, 12%);
+  --sidebar-foreground: hsl(210, 20%, 98%);
+  --sidebar-primary: hsl(210, 70%, 60%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 40%, 15%);
+  --sidebar-accent-foreground: hsl(210, 70%, 60%);
+  --sidebar-border: hsl(210, 40%, 18%);
+  --sidebar-ring: hsl(210, 70%, 60%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .mood-scale-item {
+    transition: all 0.2s ease;
+    cursor: grab;
+  }
+  
+  .mood-scale-item:active {
+    cursor: grabbing;
+  }
+  
+  .mood-scale-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  .drag-over {
+    border: 2px dashed hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.05);
+  }
+  
+  .chart-container {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, hsl(var(--secondary) / 0.05) 100%);
+  }
+
+  /* Improved form styling */
+  .form-field {
+    @apply space-y-2;
+  }
+
+  /* Better button variants */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground;
+  }
+
+  .btn-accent {
+    @apply bg-accent hover:bg-accent/90 text-accent-foreground;
+  }
+
+  /* Card improvements */
+  .card-hover {
+    @apply transition-shadow hover:shadow-md;
+  }
+
+  /* Mental health specific colors */
+  .mood-positive {
+    @apply bg-green-50 text-green-700 border-green-200;
+  }
+
+  .mood-neutral {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+  }
+
+  .mood-negative {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+
+  /* Accessibility improvements */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Animation utilities */
+  .fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(-10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
+  /* Improved spacing for mental health content */
+  .therapy-section {
+    @apply space-y-6 p-6 bg-card rounded-lg border border-border;
+  }
+
+  .abc-section {
+    @apply space-y-3 p-4 rounded-lg border;
+  }
+
+  .abc-section.activating {
+    @apply bg-primary/10 border-primary/30;
+  }
+
+  .abc-section.beliefs {
+    @apply bg-secondary/10 border-secondary/30;
+  }
+
+  .abc-section.consequences {
+    @apply bg-accent/10 border-accent/30;
+  }
+
+  /* Progress indicators */
+  .progress-bar {
+    @apply w-full bg-muted rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-primary transition-all duration-300;
+  }
+
+  /* Status indicators */
+  .status-active {
+    @apply w-2 h-2 bg-green-500 rounded-full;
+  }
+
+  .status-warning {
+    @apply w-2 h-2 bg-yellow-500 rounded-full;
+  }
+
+  .status-error {
+    @apply w-2 h-2 bg-red-500 rounded-full;
+  }
+}
+
+@layer utilities {
+  /* Text gradient utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Shadow utilities matching the design */
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .shadow-medium {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .shadow-strong {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+
+  /* Scroll utilities */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
