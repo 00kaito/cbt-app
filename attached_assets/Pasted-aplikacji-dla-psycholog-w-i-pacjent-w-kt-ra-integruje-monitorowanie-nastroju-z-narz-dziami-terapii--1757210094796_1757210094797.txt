@@ -1,0 +1,40 @@
+aplikacji dla psychologów i pacjentów, która integruje monitorowanie nastroju z narzędziami terapii poznawczo-behawioralnej (CBT).
+
+Funkcje dla pacjenta
+1. Rejestrowanie nastroju i dziennik myśli (schemat ABC)
+
+Ekran główny: Na ekranie startowym pacjent widzi prosty interfejs do szybkiego zaznaczania aktualnego nastroju na skali. Może to być np. skala od 1 do 10 lub zestaw ikon emoji.
+
+Wykrywanie niestandardowego nastroju: Gdy pacjent zaznaczy nastrój, który odbiega od ustalonej normy (np. bardzo niski lub wysoki), aplikacja pyta: "Czy chcesz stworzyć schemat myśli?"
+
+Schemat ABC: Po zaakceptowaniu, pacjent przechodzi do formularza do uzupełnienia schematu ABC:
+
+A (Activating Event): Co się wydarzyło? (Sytuacja, zdarzenie).
+
+B (Beliefs): Jakie myśli pojawiły się w tej sytuacji? (Przekonania, interpretacje).
+
+C (Consequences): Jakie emocje, doznania fizyczne i zachowania to wywołało? (Konsekwencje).
+
+Analiza zniekształceń i proponowane ćwiczenia: Po wypełnieniu schematu, system oparty na sztucznej inteligencji analizuje wpis pacjenta. Na podstawie słów kluczowych i wzorców myślowych identyfikuje potencjalne zniekształcenia poznawcze (np. myślenie czarno-białe, katastrofizowanie, nadmierne uogólnianie).
+
+Generowanie spersonalizowanych ćwiczeń: Aplikacja, korzystając z bazy danych, proponuje pacjentowi ćwiczenia dostosowane do zidentyfikowanego zniekształcenia. Mogą to być techniki kwestionowania myśli, pisania listów do swoich przekonań, czy proste ćwiczenia uważności.
+
+Pomiar efektywności ćwiczenia: Przed rozpoczęciem ćwiczenia pacjent zaznacza swój nastrój na skali (np. od 1 do 10). Po jego zakończeniu ponownie ocenia swój nastrój. Pozwala to na śledzenie, jak dana technika wpływa na jego samopoczucie.
+
+Baza gotowych rozwiązań: Pacjent ma stały dostęp do biblioteki ćwiczeń, gdzie może przeglądać i wykonywać te, które uzna za przydatne.
+
+2. Funkcja udostępniania i synchronizacji
+
+Przycisk "Podziel się z terapeutą": Każdy wpis (notatka, schemat ABC, pomiar nastroju) ma opcję udostępnienia. Po kliknięciu, wybrany wpis staje się natychmiast widoczny dla przypisanego psychologa w jego panelu.
+
+Tworzenie pliku do omówienia: Pacjent może zbiorczo oznaczać wybrane notatki i wpisy, tworząc z nich plik (np. PDF), który może być omówiony podczas sesji terapeutycznej. To ułatwia przygotowanie do spotkania i pozwala na efektywne wykorzystanie czasu.
+
+Funkcje dla psychologa
+Panel pacjenta: Psycholog ma dostęp do swojego panelu, gdzie widzi listę swoich pacjentów.
+
+Wgląd w postępy: Po wybraniu pacjenta, psycholog widzi wszystkie udostępnione przez niego dane: wykresy nastroju, wpisy w schemacie ABC, notatki oraz wyniki ćwiczeń.
+
+Lepsze przygotowanie do sesji: Dostęp do dziennika pacjenta pozwala psychologowi na bieżące monitorowanie jego stanu i przygotowanie strategii na kolejną sesję, skupiając się na konkretnych trudnościach.
+
+Motywowanie pacjenta: Psycholog może widzieć, które ćwiczenia pomagają, a które nie, co umożliwia dostosowanie planu terapeutycznego i zachęcanie pacjenta do regularnej pracy.
+
