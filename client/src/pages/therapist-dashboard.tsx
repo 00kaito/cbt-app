@@ -1,18 +1,47 @@
 import { useAuth } from "@/hooks/use-auth";
 import Navigation from "@/components/navigation";
+import ExerciseCreationModal from "@/components/exercise-creation-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
-import { UserPlus, Users, TrendingUp, Calendar } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen } from "lucide-react";
 import { Link } from "wouter";
+import { User } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function TherapistDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
 
-  const { data: patients, isLoading } = useQuery({
+  const { data: patients, isLoading } = useQuery<User[]>({
     queryKey: ["/api/therapist/patients"],
     enabled: user?.role === "therapist",
+  });
+
+  const createExerciseMutation = useMutation({
+    mutationFn: async (exerciseData: any) => {
+      const res = await apiRequest("POST", "/api/therapist/exercises", exerciseData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/therapist/exercises"] });
+      setIsExerciseModalOpen(false);
+      toast({
+        title: "Exercise created!",
+        description: "The exercise has been assigned to the selected patient.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create exercise. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (user?.role !== "therapist") {
@@ -200,7 +229,52 @@ export default function TherapistDashboard() {
             </div>
           )}
         </section>
+
+        {/* Exercise Management Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground">Exercise Management</h2>
+            <Button 
+              onClick={() => setIsExerciseModalOpen(true)}
+              data-testid="button-create-exercise"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Exercise
+            </Button>
+          </div>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2" data-testid="text-no-exercises">
+                  No exercises created yet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Create custom exercises to assign to your patients for therapeutic progress.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsExerciseModalOpen(true)}
+                  data-testid="button-create-first-exercise"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Exercise
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </main>
+
+      {/* Exercise Creation Modal */}
+      <ExerciseCreationModal
+        isOpen={isExerciseModalOpen}
+        onClose={() => setIsExerciseModalOpen(false)}
+        onSubmit={(data) => createExerciseMutation.mutate(data)}
+        patients={patients || []}
+        isLoading={createExerciseMutation.isPending}
+      />
     </div>
   );
 }
