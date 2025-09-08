@@ -247,15 +247,24 @@ Zachowanie: Co robiłeś?"
         </div>
       </div>
 
-      <div className="mt-6 flex justify-between items-center">
+      <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <Button 
+            onClick={handleSubmit}
+            disabled={createAbcSchemaMutation.isPending || isAnalyzing}
+            data-testid="button-analyze-abc"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            {isAnalyzing ? "Analizowanie..." : (editingSchema ? "Analizuj ponownie" : "Analizuj myśli")}
+          </Button>
+          <Button 
+            variant="outline"
             onClick={handleSaveDraft}
             disabled={createAbcSchemaMutation.isPending}
             data-testid="button-save-draft"
           >
             <Save className="h-4 w-4 mr-2" />
-            {editingSchema ? "Zaktualizuj" : "Zapisz"}
+            {editingSchema ? "Zaktualizuj" : "Zapisz szkic"}
           </Button>
           {editingSchema && (
             <Button 
