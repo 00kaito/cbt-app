@@ -70,6 +70,7 @@ export interface IStorage {
   getTherapistPatients(therapistId: string): Promise<User[]>;
   getPatientTherapists(patientId: string): Promise<User[]>;
   addTherapistPatient(relationship: InsertTherapistPatient): Promise<TherapistPatient>;
+  removeTherapistPatient(patientId: string, therapistId: string): Promise<void>;
   getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
 
   // Therapist exercise methods
@@ -483,6 +484,17 @@ export class DatabaseStorage implements IStorage {
       .values(relationship)
       .returning();
     return created;
+  }
+
+  async removeTherapistPatient(patientId: string, therapistId: string): Promise<void> {
+    await db
+      .delete(therapistPatients)
+      .where(
+        and(
+          eq(therapistPatients.patientId, patientId),
+          eq(therapistPatients.therapistId, therapistId)
+        )
+      );
   }
 
   async getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]> {

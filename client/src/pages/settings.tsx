@@ -45,6 +45,29 @@ export default function Settings() {
     },
   });
 
+  // Remove therapist mutation
+  const removeTherapistMutation = useMutation({
+    mutationFn: async (therapistId: string) => {
+      const res = await apiRequest("DELETE", `/api/patient/remove-therapist/${therapistId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patient/therapists"] });
+      refetchTherapists();
+      toast({
+        title: "Therapist removed",
+        description: "Therapist has been successfully removed from your account.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove therapist.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAssignTherapist = () => {
     if (!therapistEmail.trim()) {
       toast({
@@ -55,6 +78,12 @@ export default function Settings() {
       return;
     }
     assignTherapistMutation.mutate(therapistEmail.trim());
+  };
+
+  const handleRemoveTherapist = (therapistId: string) => {
+    if (confirm("Are you sure you want to remove this therapist? You will no longer be able to share data with them.")) {
+      removeTherapistMutation.mutate(therapistId);
+    }
   };
 
   return (
@@ -140,8 +169,21 @@ export default function Settings() {
                   <label className="text-sm font-medium text-foreground">Assigned Therapist</label>
                   {assignedTherapists.map((therapist: any) => (
                     <div key={therapist.id} className="mt-2 p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm font-medium">{therapist.firstName} {therapist.lastName}</p>
-                      <p className="text-xs text-muted-foreground">{therapist.email}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{therapist.firstName} {therapist.lastName}</p>
+                          <p className="text-xs text-muted-foreground">{therapist.email}</p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleRemoveTherapist(therapist.id)}
+                          disabled={removeTherapistMutation.isPending}
+                          data-testid={`button-remove-therapist-${therapist.id}`}
+                        >
+                          {removeTherapistMutation.isPending ? "Removing..." : "Remove"}
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

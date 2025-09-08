@@ -389,6 +389,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Remove therapist assignment
+  app.delete("/api/patient/remove-therapist/:therapistId", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const therapistId = req.params.therapistId;
+      
+      // Remove the assignment
+      await storage.removeTherapistPatient(req.user!.id, therapistId);
+      
+      res.json({ message: "Therapist assignment removed successfully" });
+    } catch (error) {
+      console.error("Error removing therapist assignment:", error);
+      res.status(500).json({ message: "Failed to remove therapist assignment" });
+    }
+  });
+
   // Get individual patient details for therapist
   app.get("/api/therapist/patient/:patientId", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== "therapist") {
