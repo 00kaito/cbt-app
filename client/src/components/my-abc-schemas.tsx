@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AbcSchema, Exercise } from "@shared/schema";
+import { AbcSchema, Exercise, ExerciseCompletion, TherapistExercise } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -45,6 +45,8 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
   const [analyzingSchemas, setAnalyzingSchemas] = useState<Set<string>>(new Set());
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: abcSchemas, isLoading } = useQuery<AbcSchema[]>({
     queryKey: ["/api/abc-schemas"],
@@ -64,6 +66,12 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
     queryKey: ["/api/patient/exercises"],
     enabled: viewModalOpen,
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil((abcSchemas?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSchemas = abcSchemas?.slice(startIndex, endIndex) || [];
 
   const deleteAbcSchemaMutation = useMutation({
     mutationFn: async (schemaId: string) => {
@@ -105,35 +113,6 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
     },
   });
 
-  const analyzeAbcSchemaMutation = useMutation({
-    mutationFn: async (schemaId: string) => {
-      await apiRequest("POST", `/api/abc-schemas/${schemaId}/analyze`);
-    },
-    onSuccess: (_, schemaId) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
-      setAnalyzingSchemas(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(schemaId);
-        return newSet;
-      });
-      toast({
-        title: "Analiza zakończona",
-        description: "Twoje wzorce myślowe zostały przeanalizowane.",
-      });
-    },
-    onError: (_, schemaId) => {
-      setAnalyzingSchemas(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(schemaId);
-        return newSet;
-      });
-      toast({
-        title: "Analiza nie powiodła się",
-        description: "Nie udało się przeanalizować wzorców myślowych.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleView = (schema: AbcSchema) => {
     setSelectedSchema(schema);
@@ -154,11 +133,6 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
 
   const handleShare = (schemaId: string) => {
     shareWithTherapistMutation.mutate(schemaId);
-  };
-
-  const handleAnalyze = (schemaId: string) => {
-    setAnalyzingSchemas(prev => new Set(prev.add(schemaId)));
-    analyzeAbcSchemaMutation.mutate(schemaId);
   };
 
   const handleStartExercise = (exerciseId: string) => {
@@ -232,12 +206,12 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                 Brak zapisanych myślowych ABC
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Twoje zapisane szkice i przeanalizowane zapisy pojawią się tutaj
+                Twoje zapisane zapisy pojawią się tutaj
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {abcSchemas.map((schema) => (
+              {paginatedSchemas.map((schema) => (
                 <div
                   key={schema.id}
                   className="border rounded-lg p-4 hover:bg-muted/10 transition-colors"
@@ -258,12 +232,6 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {schema.analysisResults && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Bot className="h-3 w-3 mr-1" />
-                          Przeanalizowane
-                        </Badge>
-                      )}
                       {schema.sharedWithTherapist && (
                         <Badge variant="outline" className="text-xs">
                           <Share className="h-3 w-3 mr-1" />
@@ -285,13 +253,6 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                           <DropdownMenuItem onClick={() => handleEdit(schema)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edytuj
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleAnalyze(schema.id)}
-                            disabled={analyzingSchemas.has(schema.id)}
-                          >
-                            <Bot className="h-4 w-4 mr-2" />
-                            {analyzingSchemas.has(schema.id) ? "Analizowanie..." : "Analizuj AI"}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleShare(schema.id)}>
                             <Share className="h-4 w-4 mr-2" />
@@ -335,30 +296,34 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                       </p>
                     </div>
                   </div>
-
-                  {schema.analysisResults?.distortions && schema.analysisResults.distortions.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
-                        <span className="text-sm font-medium">Wykryte wzorce:</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {schema.analysisResults.distortions.slice(0, 3).map((distortion, index) => (
-                          <Badge key={index} variant="destructive" className="text-xs">
-                            {distortion.type}
-                          </Badge>
-                        ))}
-                        {schema.analysisResults.distortions.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{schema.analysisResults.distortions.length - 3} więcej
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Poprzednia
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Strona {currentPage} z {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Następna
+                </Button>
+              </div>
+            )}
           )}
         </CardContent>
       </Card>
@@ -413,58 +378,6 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                 </div>
               </div>
 
-              {selectedSchema.analysisResults && (
-                <div className="space-y-4 border-t pt-6">
-                  <h3 className="font-semibold text-foreground">Wyniki analizy AI</h3>
-                  
-                  {selectedSchema.analysisResults.distortions?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-foreground mb-2">Wykryte zniekształcenia:</h4>
-                      <div className="space-y-2">
-                        {selectedSchema.analysisResults.distortions.map((distortion, index) => (
-                          <div key={index} className="bg-destructive/10 border border-destructive/20 rounded p-3">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-foreground">{distortion.type}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {Math.round(distortion.confidence * 100)}% pewności
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">{distortion.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedSchema.analysisResults.recommendations?.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-foreground mb-2">Rekomendowane ćwiczenia:</h4>
-                      <div className="space-y-2">
-                        {selectedSchema.analysisResults.recommendations.map((rec, index) => (
-                          <div key={index} className="bg-accent/10 border border-accent/20 rounded p-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <span className="font-medium text-foreground capitalize">
-                                  {rec.exerciseId.replace('-', ' ')}
-                                </span>
-                                <p className="text-sm text-muted-foreground mt-1">{rec.reason}</p>
-                              </div>
-                              <Button 
-                                size="sm"
-                                className="bg-accent hover:bg-accent/90 text-accent-foreground ml-3"
-                                onClick={() => handleStartExercise(rec.exerciseId)}
-                                data-testid={`button-start-exercise-${index}`}
-                              >
-                                Rozpocznij
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Assigned Exercises for this ABC */}
               {selectedSchema && patientExercises && patientExercises.filter(ex => ex.abcSchemaId === selectedSchema.id).length > 0 && (
