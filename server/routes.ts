@@ -85,6 +85,19 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.patch("/api/mood-entries/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const entry = await storage.updateMoodEntry(req.params.id, req.body);
+      if (!entry || entry.userId !== req.user!.id) {
+        return res.status(404).json({ message: "Mood entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update mood entry" });
+    }
+  });
+
   // ABC Schema routes
   app.get("/api/abc-schemas", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

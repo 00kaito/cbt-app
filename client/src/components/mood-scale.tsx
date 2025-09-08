@@ -93,6 +93,27 @@ export default function MoodScale() {
     },
   });
 
+  const updateMoodEntryMutation = useMutation({
+    mutationFn: async ({ id, moodData }: { id: string; moodData: { moodLevel: number; notes?: string; moodScaleId?: string } }) => {
+      const res = await apiRequest("PATCH", `/api/mood-entries/${id}`, moodData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mood-entries"] });
+      toast({
+        title: "Mood updated",
+        description: "Your mood has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update mood. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const currentScale = moodScales?.[0] || { levels: defaultMoodLevels };
   const averageMood = recentMoods?.reduce((sum: number, entry: any) => sum + entry.moodLevel, 0) / (recentMoods?.length || 1) || 4;
 
@@ -105,11 +126,28 @@ export default function MoodScale() {
       setShowABCSuggestion(true);
     }
 
-    // Record the mood
-    createMoodEntryMutation.mutate({
+    // Check if there's already a mood entry for today
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const todayEntry = recentMoods?.find((entry: any) => {
+      const entryDate = new Date(entry.recordedAt).toISOString().split('T')[0];
+      return entryDate === today;
+    });
+
+    const moodData = {
       moodLevel: level,
       moodScaleId: moodScales?.[0]?.id,
-    });
+    };
+
+    if (todayEntry) {
+      // Update existing entry
+      updateMoodEntryMutation.mutate({
+        id: todayEntry.id,
+        moodData,
+      });
+    } else {
+      // Create new entry
+      createMoodEntryMutation.mutate(moodData);
+    }
   };
 
   return (
@@ -197,6 +235,17 @@ export default function MoodScale() {
                   <Button 
                     className="bg-accent hover:bg-accent/90 text-accent-foreground"
                     size="sm"
+                    onClick={() => {
+                      setShowABCSuggestion(false);
+                      // Smooth scroll to ABC section
+                      const abcSection = document.querySelector('[data-testid="abc-schema-section"]');
+                      if (abcSection) {
+                        abcSection.scrollIntoView({ 
+                          behavior: 'smooth',
+                          block: 'start'
+                        });
+                      }
+                    }}
                     data-testid="button-create-abc-schema"
                   >
                     Create ABC Thought Record

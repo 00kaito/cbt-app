@@ -75,7 +75,10 @@ export default function ABCSchemaForm() {
   };
 
   return (
-    <section className="bg-card rounded-lg shadow-sm border border-border p-6">
+    <section 
+      className="bg-card rounded-lg shadow-sm border border-border p-6"
+      data-testid="abc-schema-section"
+    >
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground" data-testid="text-abc-title">
           ABC Thought Record

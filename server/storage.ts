@@ -42,6 +42,7 @@ export interface IStorage {
   // Mood entry methods
   getMoodEntries(userId: string, limit?: number): Promise<MoodEntry[]>;
   createMoodEntry(moodEntry: InsertMoodEntry): Promise<MoodEntry>;
+  updateMoodEntry(id: string, moodEntry: Partial<InsertMoodEntry>): Promise<MoodEntry | undefined>;
 
   // ABC schema methods
   getAbcSchemas(userId: string): Promise<AbcSchema[]>;
@@ -145,6 +146,15 @@ export class DatabaseStorage implements IStorage {
       .values(moodEntry)
       .returning();
     return created;
+  }
+
+  async updateMoodEntry(id: string, moodEntry: Partial<InsertMoodEntry>): Promise<MoodEntry | undefined> {
+    const [updated] = await db
+      .update(moodEntries)
+      .set(moodEntry)
+      .where(eq(moodEntries.id, id))
+      .returning();
+    return updated;
   }
 
   async getAbcSchemas(userId: string): Promise<AbcSchema[]> {
