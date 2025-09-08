@@ -27,7 +27,7 @@ export default function Dashboard() {
         {/* Quick Mood Entry */}
         <section className="bg-card rounded-lg shadow-sm border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-foreground">How are you feeling today?</h2>
+            <h2 className="text-xl font-semibold text-foreground">Jak się dzisiaj czujesz?</h2>
             <span className="text-sm text-muted-foreground" data-testid="text-current-date">
               {format(new Date(), "MMMM d, yyyy")}
             </span>
@@ -46,17 +46,17 @@ export default function Dashboard() {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle data-testid="text-recent-activity">Recent Activity</CardTitle>
+              <CardTitle data-testid="text-recent-activity">Ostatnia aktywność</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentActivities?.length === 0 ? (
                 <div className="text-center py-8">
                   <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground" data-testid="text-no-activity">
-                    No recent activity
+                    Brak ostatniej aktywności
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Start by tracking your mood or completing an exercise
+                    Rozpocznij od śledzenia nastroju lub wykonania ćwiczenia
                   </p>
                 </div>
               ) : (

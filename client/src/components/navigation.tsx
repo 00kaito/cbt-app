@@ -15,14 +15,14 @@ export default function Navigation() {
 
   const navItems = user?.role === "therapist" 
     ? [
-        { href: "/therapist", label: "Dashboard", active: location === "/therapist" },
-        { href: "/therapist/patients", label: "Patients", active: location.startsWith("/therapist/patients") },
-        { href: "/therapist/sessions", label: "Sessions", active: location.startsWith("/therapist/sessions") },
+        { href: "/therapist", label: "Panel główny", active: location === "/therapist" },
+        { href: "/therapist/patients", label: "Pacjenci", active: location.startsWith("/therapist/patients") },
+        { href: "/therapist/sessions", label: "Sesje", active: location.startsWith("/therapist/sessions") },
       ]
     : [
-        { href: "/", label: "Dashboard", active: location === "/" },
-        { href: "/completed-exercises", label: "Completed Exercises", active: location === "/completed-exercises" },
-        { href: "/settings", label: "Settings", active: location === "/settings" },
+        { href: "/", label: "Panel główny", active: location === "/" },
+        { href: "/completed-exercises", label: "Ukończone ćwiczenia", active: location === "/completed-exercises" },
+        { href: "/settings", label: "Ustawienia", active: location === "/settings" },
       ];
 
   return (
@@ -81,13 +81,13 @@ export default function Navigation() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem data-testid="menu-profile">
                   <User className="h-4 w-4 mr-2" />
-                  Profile
+                  Profil
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => logoutMutation.mutate()}
                   data-testid="menu-logout"
                 >
-                  Logout
+                  Wyloguj
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
