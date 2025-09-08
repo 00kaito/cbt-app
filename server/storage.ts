@@ -343,18 +343,50 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(exerciseCompletions.completedAt));
   }
 
-  async getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]> {
-    const result = await db
+  async getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]> {
+    // Get all exercise completions for the user
+    const completions = await db
       .select()
       .from(exerciseCompletions)
-      .innerJoin(exercises, eq(exerciseCompletions.exerciseId, exercises.id))
       .where(eq(exerciseCompletions.userId, userId))
       .orderBy(desc(exerciseCompletions.completedAt));
-    
-    return result.map(row => ({
-      ...row.exercise_completions,
-      exercise: row.exercises
-    }));
+
+    // For each completion, try to find the exercise from therapist_exercises first, then exercises
+    const completionsWithExercise = await Promise.all(
+      completions.map(async (completion) => {
+        // Try to find in therapist_exercises first
+        const [therapistExercise] = await db
+          .select()
+          .from(therapistExercises)
+          .where(eq(therapistExercises.id, completion.exerciseId));
+
+        if (therapistExercise) {
+          return {
+            ...completion,
+            exercise: therapistExercise
+          };
+        }
+
+        // Fallback to regular exercises table
+        const [exercise] = await db
+          .select()
+          .from(exercises)
+          .where(eq(exercises.id, completion.exerciseId));
+
+        if (exercise) {
+          return {
+            ...completion,
+            exercise: exercise
+          };
+        }
+
+        // If no exercise found, return null (will be filtered out)
+        return null;
+      })
+    );
+
+    // Filter out null results and return
+    return completionsWithExercise.filter(Boolean) as (ExerciseCompletion & { exercise: Exercise | TherapistExercise })[];
   }
 
   async createExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion> {

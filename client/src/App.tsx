@@ -10,12 +10,14 @@ import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import TherapistDashboard from "@/pages/therapist-dashboard";
 import PatientDetail from "@/pages/patient-detail";
+import CompletedExercisesPage from "@/pages/completed-exercises-page";
 import Settings from "@/pages/settings";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/completed-exercises" component={CompletedExercisesPage} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/therapist" component={TherapistDashboard} />
       <ProtectedRoute path="/therapist/patient/:id" component={PatientDetail} />

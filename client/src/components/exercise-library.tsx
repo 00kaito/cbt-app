@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Clock, Play, BookOpen, CheckCircle, Calendar } from "lucide-react";
+import { Link } from "wouter";
 import { TherapistExercise, ExerciseCompletion } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -87,47 +88,17 @@ export default function ExerciseLibrary() {
           </div>
           
           <div className="grid gap-4">
-            {completions.map((completion) => {
-              const exercise = displayExercises.find(ex => ex.id === completion.exerciseId);
-              if (!exercise) return null;
-              
-              return (
-                <Card key={completion.id} className="border-l-4 border-l-green-500">
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-foreground">{exercise.title}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(completion.completedAt).toLocaleDateString('pl-PL')}
-                          </div>
-                          {completion.moodBefore && completion.moodAfter && (
-                            <div className="text-xs">
-                              Mood: {completion.moodBefore} → {completion.moodAfter}
-                              {completion.moodAfter > completion.moodBefore && (
-                                <span className="text-green-600 ml-1">↗</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {completion.response && (
-                        <div className="bg-muted/30 p-3 rounded-md">
-                          <p className="text-sm text-foreground">
-                            {completion.response.length > 150 
-                              ? `${completion.response.substring(0, 150)}...` 
-                              : completion.response
-                            }
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <div className="text-center py-6">
+              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-4">
+                You have {completions.length} completed exercise{completions.length !== 1 ? 's' : ''}.
+              </p>
+              <Link href="/completed-exercises">
+                <Button variant="outline" size="sm" data-testid="button-view-all-completed">
+                  View All Completed Exercises
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
       )}

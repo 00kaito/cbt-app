@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle, Clock, TrendingUp, Brain } from "lucide-react";
 import { format } from "date-fns";
-import { ExerciseCompletion, Exercise } from "@shared/schema";
+import { ExerciseCompletion, Exercise, TherapistExercise } from "@shared/schema";
 
-type CompletedExercise = ExerciseCompletion & { exercise: Exercise };
+type CompletedExercise = ExerciseCompletion & { exercise: Exercise | TherapistExercise };
 
 export default function CompletedExercises() {
   const { data: completedExercises, isLoading } = useQuery<CompletedExercise[]>({
