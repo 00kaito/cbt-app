@@ -355,6 +355,7 @@ export function registerRoutes(app: Express): Server {
       }
       
       const sharedData = await storage.getSharedDataForTherapist(req.user!.id, patientId);
+      console.log("Shared data for therapist:", req.user!.id, "patient:", patientId, "data:", JSON.stringify(sharedData, null, 2));
       res.json(sharedData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shared data" });

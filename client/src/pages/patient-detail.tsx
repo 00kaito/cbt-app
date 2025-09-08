@@ -31,10 +31,13 @@ export default function PatientDetail() {
   });
 
   // Fetch shared ABC schemas
-  const { data: sharedSchemas } = useQuery({
+  const { data: sharedData } = useQuery({
     queryKey: ["/api/therapist/patient", patientId, "shared-data"],
     enabled: user?.role === "therapist" && !!patientId,
   });
+  
+  console.log("Shared data received:", sharedData);
+  const sharedSchemas = sharedData?.abcSchemas || [];
 
   if (user?.role !== "therapist") {
     return (
@@ -170,7 +173,7 @@ export default function PatientDetail() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Share className="h-5 w-5" />
-              <span>Shared ABC Thought Records</span>
+              <span>Shared ABC Thought Records ({sharedSchemas.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
