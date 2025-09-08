@@ -274,7 +274,13 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {schema.analysisResults && (
+                      {analyzingSchemas.has(schema.id) && (
+                        <Badge variant="secondary" className="text-xs animate-pulse">
+                          <div className="w-3 h-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Analizowanie...
+                        </Badge>
+                      )}
+                      {!analyzingSchemas.has(schema.id) && schema.analysisResults && (
                         <Badge variant="secondary" className="text-xs">
                           <Bot className="h-3 w-3 mr-1" />
                           Przeanalizowane
@@ -306,7 +312,11 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                             onClick={() => handleAnalyze(schema.id)}
                             disabled={analyzingSchemas.has(schema.id)}
                           >
-                            <Bot className="h-4 w-4 mr-2" />
+                            {analyzingSchemas.has(schema.id) ? (
+                              <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Bot className="h-4 w-4 mr-2" />
+                            )}
                             {analyzingSchemas.has(schema.id) ? "Analizowanie..." : "Analizuj AI"}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleShare(schema.id)}>
