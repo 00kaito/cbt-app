@@ -236,13 +236,29 @@ export default function TherapistDashboard() {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Obecny nastrój:</span>
                         <span className="text-foreground flex items-center">
-                          <span className="w-2 h-2 bg-muted rounded-full mr-1"></span>
-                          Nie śledzony
+                          {patient.latestMood ? (
+                            <>
+                              <span 
+                                className={`w-2 h-2 rounded-full mr-1 ${
+                                  patient.latestMood.value >= 7 ? 'bg-green-500' :
+                                  patient.latestMood.value >= 4 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                              ></span>
+                              {patient.latestMood.value}/10
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-2 h-2 bg-muted rounded-full mr-1"></span>
+                              Nie śledzony
+                            </>
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Udostępnione elementy:</span>
-                        <span className="text-primary font-medium">0 nowych</span>
+                        <span className="text-primary font-medium">
+                          {patient.newItemsSinceLastVisit || 0} nowych
+                        </span>
                       </div>
                     </div>
 
@@ -257,14 +273,6 @@ export default function TherapistDashboard() {
                           Zobacz postępy
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1" 
-                        data-testid={`button-schedule-${patient.id}`}
-                      >
-                        Zaplanuj
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
