@@ -27,6 +27,8 @@ export default function PatientDetail() {
     queryKey: ["/api/therapist/patient", patientId, "mood-entries"],
     enabled: user?.role === "therapist" && !!patientId,
   });
+  
+  console.log("Patient mood entries for", patientId, ":", moodEntries);
 
   // Fetch shared ABC schemas
   const { data: sharedData } = useQuery({
@@ -153,7 +155,12 @@ export default function PatientDetail() {
           </CardHeader>
           <CardContent>
             {moodEntries && moodEntries.length > 0 ? (
-              <MoodChart moodEntries={moodEntries} />
+              <div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Showing {moodEntries.length} mood entries for {patient?.firstName} {patient?.lastName}
+                </p>
+                <MoodChart moodEntries={moodEntries} />
+              </div>
             ) : (
               <div className="text-center py-8">
                 <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
