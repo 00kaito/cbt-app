@@ -99,18 +99,25 @@ export default function MoodScale() {
 
   const handleMoodSelect = (level: number) => {
     setSelectedLevel(level);
+  };
+
+  const handleSaveMood = () => {
+    if (selectedLevel === null) return;
     
     // Check if mood significantly deviates from average
-    const deviation = Math.abs(level - averageMood);
+    const deviation = Math.abs(selectedLevel - averageMood);
     if (deviation >= 2) {
       setShowABCSuggestion(true);
     }
 
-    // Always create new mood entry
+    // Create new mood entry
     createMoodEntryMutation.mutate({
-      moodLevel: level,
+      moodLevel: selectedLevel,
       moodScaleId: moodScales?.[0]?.id,
     });
+
+    // Clear selection after saving
+    setSelectedLevel(null);
   };
 
   return (
@@ -179,6 +186,27 @@ export default function MoodScale() {
             </div>
           ))}
         </div>
+
+        {/* Save Mood Button */}
+        {selectedLevel !== null && (
+          <div className="mt-4 flex justify-center">
+            <Button 
+              onClick={handleSaveMood}
+              disabled={createMoodEntryMutation.isPending}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2"
+              data-testid="button-save-mood"
+            >
+              {createMoodEntryMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                  Zapisywanie...
+                </>
+              ) : (
+                `Zapisz nastrój (Poziom ${selectedLevel})`
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ABC Schema Suggestion */}
