@@ -235,6 +235,58 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Patient routes for therapist management
+  app.get("/api/patient/therapists", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const therapists = await storage.getPatientTherapists(req.user!.id);
+      res.json(therapists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch therapists" });
+    }
+  });
+
+  app.post("/api/patient/assign-therapist", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Find therapist by email
+      const therapist = await storage.getUserByEmail(email);
+      
+      if (!therapist) {
+        return res.status(404).json({ message: "Therapist not found with this email address" });
+      }
+
+      if (therapist.role !== "therapist") {
+        return res.status(400).json({ message: "User with this email is not a therapist" });
+      }
+
+      // Check if relationship already exists
+      const existingTherapists = await storage.getPatientTherapists(req.user!.id);
+      const alreadyAssigned = existingTherapists.some(t => t.id === therapist.id);
+      
+      if (alreadyAssigned) {
+        return res.status(400).json({ message: "This therapist is already assigned to your account" });
+      }
+
+      // Create the relationship
+      const validatedData = insertTherapistPatientSchema.parse({
+        therapistId: therapist.id,
+        patientId: req.user!.id
+      });
+      
+      const relationship = await storage.addTherapistPatient(validatedData);
+      res.status(201).json(relationship);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to assign therapist" });
+    }
+  });
+
   app.get("/api/therapist/shared-data/:patientId", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== "therapist") {
       return res.sendStatus(403);
