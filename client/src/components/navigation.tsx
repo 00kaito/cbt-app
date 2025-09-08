@@ -21,9 +21,7 @@ export default function Navigation() {
       ]
     : [
         { href: "/", label: "Dashboard", active: location === "/" },
-        { href: "/mood-tracking", label: "Mood Tracking", active: location === "/mood-tracking" },
-        { href: "/exercises", label: "Exercises", active: location === "/exercises" },
-        { href: "/abc-schema", label: "ABC Schema", active: location === "/abc-schema" },
+        { href: "/settings", label: "Settings", active: location === "/settings" },
       ];
 
   return (
@@ -40,17 +38,17 @@ export default function Navigation() {
             
             <nav className="hidden md:flex space-x-6">
               {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a 
-                    className={
-                      item.active
-                        ? "text-primary font-medium border-b-2 border-primary pb-4"
-                        : "text-muted-foreground hover:text-foreground transition-colors"
-                    }
-                    data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                  >
-                    {item.label}
-                  </a>
+                <Link 
+                  key={item.href} 
+                  href={item.href}
+                  className={
+                    item.active
+                      ? "text-primary font-medium border-b-2 border-primary pb-4"
+                      : "text-muted-foreground hover:text-foreground transition-colors"
+                  }
+                  data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                >
+                  {item.label}
                 </Link>
               ))}
             </nav>

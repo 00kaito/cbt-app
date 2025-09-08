@@ -9,11 +9,13 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import TherapistDashboard from "@/pages/therapist-dashboard";
+import Settings from "@/pages/settings";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/therapist" component={TherapistDashboard} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

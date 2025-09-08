@@ -3,7 +3,6 @@ import Navigation from "@/components/navigation";
 import MoodScale from "@/components/mood-scale";
 import ABCSchemaForm from "@/components/abc-schema-form";
 import AIAnalysis from "@/components/ai-analysis";
-import CustomScaleBuilder from "@/components/custom-scale-builder";
 import MoodChart from "@/components/mood-chart";
 import ExerciseLibrary from "@/components/exercise-library";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,8 +107,6 @@ export default function Dashboard() {
         {/* AI Analysis */}
         <AIAnalysis />
 
-        {/* Custom Scale Builder */}
-        <CustomScaleBuilder />
 
         {/* Exercise Library */}
         <ExerciseLibrary />
