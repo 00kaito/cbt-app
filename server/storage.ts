@@ -74,6 +74,7 @@ export interface IStorage {
 
   // Therapist exercise methods
   getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]>;
+  getTherapistExercisesByTherapist(therapistId: string): Promise<TherapistExercise[]>;
   createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise>;
   updateTherapistExercise(id: string, exercise: Partial<InsertTherapistExercise>): Promise<TherapistExercise>;
   deleteTherapistExercise(id: string): Promise<void>;
@@ -445,6 +446,17 @@ export class DatabaseStorage implements IStorage {
       .from(therapistExercises)
       .where(and(
         eq(therapistExercises.patientId, patientId),
+        eq(therapistExercises.isActive, true)
+      ))
+      .orderBy(desc(therapistExercises.createdAt));
+  }
+
+  async getTherapistExercisesByTherapist(therapistId: string): Promise<TherapistExercise[]> {
+    return await db
+      .select()
+      .from(therapistExercises)
+      .where(and(
+        eq(therapistExercises.therapistId, therapistId),
         eq(therapistExercises.isActive, true)
       ))
       .orderBy(desc(therapistExercises.createdAt));

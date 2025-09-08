@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen } from "lucide-react";
+import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen, Clock, Edit, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +19,11 @@ export default function TherapistDashboard() {
 
   const { data: patients, isLoading } = useQuery<User[]>({
     queryKey: ["/api/therapist/patients"],
+    enabled: user?.role === "therapist",
+  });
+
+  const { data: therapistExercises, isLoading: exercisesLoading } = useQuery({
+    queryKey: ["/api/therapist/exercises"],
     enabled: user?.role === "therapist",
   });
 
@@ -243,27 +248,101 @@ export default function TherapistDashboard() {
             </Button>
           </div>
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2" data-testid="text-no-exercises">
-                  No exercises created yet
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Create custom exercises to assign to your patients for therapeutic progress.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsExerciseModalOpen(true)}
-                  data-testid="button-create-first-exercise"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Exercise
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {exercisesLoading ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : !therapistExercises || therapistExercises.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2" data-testid="text-no-exercises">
+                    No exercises created yet
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create custom exercises to assign to your patients for therapeutic progress.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsExerciseModalOpen(true)}
+                    data-testid="button-create-first-exercise"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Exercise
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {therapistExercises.map((exercise) => {
+                const assignedPatient = patients?.find(p => p.id === exercise.patientId);
+                
+                return (
+                  <Card key={exercise.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-medium text-foreground" data-testid={`exercise-title-${exercise.id}`}>
+                              {exercise.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {exercise.description}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-1 ml-4">
+                            <Button variant="ghost" size="sm" data-testid={`button-edit-${exercise.id}`}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" data-testid={`button-delete-${exercise.id}`}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{exercise.estimatedDuration} min</span>
+                            </div>
+                            <span className="capitalize">{exercise.difficulty}</span>
+                          </div>
+                          <span className="text-xs bg-muted px-2 py-1 rounded">
+                            {exercise.category}
+                          </span>
+                        </div>
+
+                        {assignedPatient && (
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                <span className="text-primary-foreground text-xs">
+                                  {assignedPatient.firstName[0]}{assignedPatient.lastName[0]}
+                                </span>
+                              </div>
+                              <span className="text-sm text-foreground">
+                                {assignedPatient.firstName} {assignedPatient.lastName}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(exercise.createdAt).toLocaleDateString('pl-PL')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </section>
       </main>
 

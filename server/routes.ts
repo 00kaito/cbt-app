@@ -456,6 +456,19 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get exercises created by current therapist
+  app.get("/api/therapist/exercises", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const exercises = await storage.getTherapistExercisesByTherapist(req.user!.id);
+      res.json(exercises);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch therapist exercises" });
+    }
+  });
+
   app.get("/api/therapist/shared-data/:patientId", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== "therapist") {
       return res.sendStatus(403);
