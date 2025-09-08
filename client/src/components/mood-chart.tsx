@@ -124,12 +124,20 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
   );
 };
 
-export default function MoodChart() {
+interface MoodChartProps {
+  moodEntries?: MoodEntry[];
+}
+
+export default function MoodChart({ moodEntries: propMoodEntries }: MoodChartProps = {}) {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   
-  const { data: moodEntries, isLoading } = useQuery<MoodEntry[]>({
+  // Use prop data if provided, otherwise fetch from API
+  const { data: fetchedMoodEntries, isLoading } = useQuery<MoodEntry[]>({
     queryKey: ["/api/mood-entries"],
+    enabled: !propMoodEntries, // Only fetch if no prop data provided
   });
+  
+  const moodEntries = propMoodEntries || fetchedMoodEntries;
 
   const filteredEntries = useMemo(() => {
     if (!moodEntries) return [];
@@ -184,7 +192,7 @@ export default function MoodChart() {
       </CardHeader>
       <CardContent>
         <div className="chart-container rounded-lg p-4 h-64 flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
-          {isLoading ? (
+          {isLoading && !propMoodEntries ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
               <p className="text-sm text-muted-foreground">Loading mood data...</p>

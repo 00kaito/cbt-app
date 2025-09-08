@@ -324,7 +324,6 @@ export function registerRoutes(app: Express): Server {
       }
       
       const moodEntries = await storage.getMoodEntries(patientId);
-      console.log("Fetching mood entries for patient:", patientId, "found:", moodEntries.length, "entries");
       res.json(moodEntries);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch mood entries" });

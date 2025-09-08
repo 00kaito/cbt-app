@@ -28,7 +28,6 @@ export default function PatientDetail() {
     enabled: user?.role === "therapist" && !!patientId,
   });
   
-  console.log("Patient mood entries for", patientId, ":", moodEntries);
 
   // Fetch shared ABC schemas
   const { data: sharedData } = useQuery({
