@@ -60,6 +60,7 @@ export interface IStorage {
 
   // Exercise completion methods
   getExerciseCompletions(userId: string): Promise<ExerciseCompletion[]>;
+  getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
   createExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion>;
 
   // Therapist-patient methods
@@ -330,6 +331,20 @@ export class DatabaseStorage implements IStorage {
       .from(exerciseCompletions)
       .where(eq(exerciseCompletions.userId, userId))
       .orderBy(desc(exerciseCompletions.completedAt));
+  }
+
+  async getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]> {
+    const result = await db
+      .select()
+      .from(exerciseCompletions)
+      .innerJoin(exercises, eq(exerciseCompletions.exerciseId, exercises.id))
+      .where(eq(exerciseCompletions.userId, userId))
+      .orderBy(desc(exerciseCompletions.completedAt));
+    
+    return result.map(row => ({
+      ...row.exercise_completions,
+      exercise: row.exercises
+    }));
   }
 
   async createExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion> {

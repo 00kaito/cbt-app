@@ -188,6 +188,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/exercise-completions-with-exercise", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const completions = await storage.getExerciseCompletionsWithExercise(req.user!.id);
+      res.json(completions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise completions with exercise details" });
+    }
+  });
+
   app.post("/api/exercise-completions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
