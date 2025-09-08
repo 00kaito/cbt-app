@@ -75,6 +75,7 @@ export interface IStorage {
   // Therapist exercise methods
   getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]>;
   getTherapistExercisesByTherapist(therapistId: string): Promise<TherapistExercise[]>;
+  getTherapistExercise(id: string): Promise<TherapistExercise | undefined>;
   createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise>;
   updateTherapistExercise(id: string, exercise: Partial<InsertTherapistExercise>): Promise<TherapistExercise>;
   deleteTherapistExercise(id: string): Promise<void>;
@@ -518,6 +519,11 @@ export class DatabaseStorage implements IStorage {
         eq(therapistExercises.isActive, true)
       ))
       .orderBy(desc(therapistExercises.createdAt));
+  }
+
+  async getTherapistExercise(id: string): Promise<TherapistExercise | undefined> {
+    const [exercise] = await db.select().from(therapistExercises).where(eq(therapistExercises.id, id));
+    return exercise || undefined;
   }
 
   async createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise> {

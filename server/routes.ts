@@ -236,20 +236,23 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/exercise-completions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      console.log("Exercise completion request body:", req.body);
       const validatedData = insertExerciseCompletionSchema.parse({
         ...req.body,
         userId: req.user!.id
       });
-      console.log("Validated data:", validatedData);
 
       // Check if this is a therapist exercise or regular exercise
       const isTherapistExercise = await storage.isTherapistExercise(validatedData.exerciseId);
-      console.log("Is therapist exercise:", isTherapistExercise);
 
       if (isTherapistExercise) {
         // For therapist exercises, we need to handle completion differently
-        const completion = await storage.createTherapistExerciseCompletion(validatedData);
+        // Get the therapist exercise to check if it has an abcSchemaId
+        const therapistExercise = await storage.getTherapistExercise(validatedData.exerciseId);
+        const completionData = {
+          ...validatedData,
+          abcSchemaId: therapistExercise?.abcSchemaId || null
+        };
+        const completion = await storage.createTherapistExerciseCompletion(completionData);
         res.status(201).json(completion);
       } else {
         // Regular exercise completion
@@ -495,14 +498,11 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const abcSchemaId = req.params.id;
-      console.log(`Fetching exercises for ABC schema: ${abcSchemaId}, User: ${req.user!.id}, Role: ${req.user!.role}`);
       
       // Verify ABC schema exists and user has access
       const abcSchema = await storage.getAbcSchema(abcSchemaId);
-      console.log("ABC Schema found:", abcSchema ? "Yes" : "No");
       
       if (!abcSchema) {
-        console.log("ABC schema not found in database");
         return res.status(404).json({ message: "ABC schema not found" });
       }
 
@@ -510,24 +510,19 @@ export function registerRoutes(app: Express): Server {
       if (req.user!.role === "therapist") {
         // Get all patients for this therapist to check access
         const patients = await storage.getTherapistPatients(req.user!.id);
-        console.log("Therapist patients:", patients.map(p => p.id));
-        console.log("ABC schema userId:", abcSchema.userId);
         const hasAccess = patients.some(patient => patient.id === abcSchema.userId);
-        console.log("Therapist has access:", hasAccess);
         
         if (!hasAccess) {
           return res.status(403).json({ message: "Access denied to this ABC schema" });
         }
       } else {
         // For patients, verify they own this ABC schema
-        console.log("Patient checking ownership:", abcSchema.userId === req.user!.id);
         if (abcSchema.userId !== req.user!.id) {
           return res.status(403).json({ message: "Access denied to this ABC schema" });
         }
       }
       
       const exercises = await storage.getExerciseCompletionsByAbcSchemaId(abcSchemaId);
-      console.log("Found exercises:", exercises.length);
       res.json(exercises);
     } catch (error) {
       console.error("Error fetching ABC exercises:", error);
