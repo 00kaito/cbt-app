@@ -26,6 +26,8 @@ import { db } from "./db";
 import { eq, and, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
+  // Seed methods
+  seedExercises(): Promise<void>;
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -208,7 +210,105 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExercises(): Promise<Exercise[]> {
-    return await db.select().from(exercises).orderBy(asc(exercises.title));
+    const dbExercises = await db.select().from(exercises).orderBy(asc(exercises.title));
+    
+    // If no exercises in DB, return mock exercises for now
+    if (dbExercises.length === 0) {
+      return [
+        {
+          id: "evidence-examination",
+          title: "Evidence Examination",
+          description: "Examine the evidence for and against your negative thoughts",
+          instructions: "List all evidence supporting your thought, then list evidence against it. Compare both lists objectively.",
+          category: "Thought Challenging",
+          targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
+          estimatedDuration: 15,
+          difficulty: "medium",
+        },
+        {
+          id: "balanced-thinking",
+          title: "Balanced Thinking",
+          description: "Reframe negative thoughts into more balanced, realistic perspectives",
+          instructions: "Take your negative thought and rewrite it in a more balanced, fair way that considers multiple perspectives.",
+          category: "Cognitive Restructuring",
+          targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
+          estimatedDuration: 10,
+          difficulty: "easy",
+        },
+        {
+          id: "thought-challenging",
+          title: "Thought Challenging",
+          description: "Question the validity and helpfulness of negative thoughts",
+          instructions: "Ask yourself: Is this thought helpful? Is it realistic? What would I tell a friend having this thought?",
+          category: "Thought Challenging",
+          targetDistortions: ["overgeneralization", "mind-reading"],
+          estimatedDuration: 12,
+          difficulty: "medium",
+        },
+        {
+          id: "mindfulness-exercise",
+          title: "Mindfulness Breathing",
+          description: "Practice present-moment awareness through focused breathing",
+          instructions: "Focus on your breath for 5-10 minutes. When your mind wanders, gently return attention to breathing.",
+          category: "Mindfulness",
+          targetDistortions: ["emotional-reasoning", "worry"],
+          estimatedDuration: 10,
+          difficulty: "easy",
+        },
+      ];
+    }
+    
+    return dbExercises;
+  }
+
+  async seedExercises(): Promise<void> {
+    const existing = await db.select().from(exercises).limit(1);
+    if (existing.length > 0) return; // Already seeded
+
+    const mockExercises = [
+      {
+        id: "evidence-examination",
+        title: "Evidence Examination",
+        description: "Examine the evidence for and against your negative thoughts",
+        instructions: "List all evidence supporting your thought, then list evidence against it. Compare both lists objectively.",
+        category: "Thought Challenging",
+        targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
+        estimatedDuration: 15,
+        difficulty: "medium",
+      },
+      {
+        id: "balanced-thinking",
+        title: "Balanced Thinking",
+        description: "Reframe negative thoughts into more balanced, realistic perspectives",
+        instructions: "Take your negative thought and rewrite it in a more balanced, fair way that considers multiple perspectives.",
+        category: "Cognitive Restructuring",
+        targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
+        estimatedDuration: 10,
+        difficulty: "easy",
+      },
+      {
+        id: "thought-challenging",
+        title: "Thought Challenging",
+        description: "Question the validity and helpfulness of negative thoughts",
+        instructions: "Ask yourself: Is this thought helpful? Is it realistic? What would I tell a friend having this thought?",
+        category: "Thought Challenging",
+        targetDistortions: ["overgeneralization", "mind-reading"],
+        estimatedDuration: 12,
+        difficulty: "medium",
+      },
+      {
+        id: "mindfulness-exercise",
+        title: "Mindfulness Breathing",
+        description: "Practice present-moment awareness through focused breathing",
+        instructions: "Focus on your breath for 5-10 minutes. When your mind wanders, gently return attention to breathing.",
+        category: "Mindfulness",
+        targetDistortions: ["emotional-reasoning", "worry"],
+        estimatedDuration: 10,
+        difficulty: "easy",
+      },
+    ];
+
+    await db.insert(exercises).values(mockExercises).onConflictDoNothing();
   }
 
   async getExercise(id: string): Promise<Exercise | undefined> {

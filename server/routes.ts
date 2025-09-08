@@ -165,6 +165,9 @@ export function registerRoutes(app: Express): Server {
   // Exercise routes
   app.get("/api/exercises", async (req, res) => {
     try {
+      // Ensure exercises are seeded
+      await storage.seedExercises();
+      
       const category = req.query.category as string;
       const exercises = category 
         ? await storage.getExercisesByCategory(category)
@@ -188,10 +191,12 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/exercise-completions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
+      console.log("Exercise completion request body:", req.body);
       const validatedData = insertExerciseCompletionSchema.parse({
         ...req.body,
         userId: req.user!.id
       });
+      console.log("Validated data:", validatedData);
 
       // Calculate effectiveness if both before and after moods are provided
       if (validatedData.moodBefore && validatedData.moodAfter) {
@@ -202,7 +207,12 @@ export function registerRoutes(app: Express): Server {
       const completion = await storage.createExerciseCompletion(validatedData);
       res.status(201).json(completion);
     } catch (error) {
-      res.status(400).json({ message: "Invalid exercise completion data" });
+      console.error("Exercise completion error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Invalid exercise completion data", details: error.message });
+      } else {
+        res.status(400).json({ message: "Invalid exercise completion data" });
+      }
     }
   });
 
