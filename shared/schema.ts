@@ -117,6 +117,15 @@ export const sharedData = pgTable("shared_data", {
   sharedAt: timestamp("shared_at").defaultNow().notNull(),
 });
 
+export const therapistPatientVisits = pgTable("therapist_patient_visits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id),
+  patientId: varchar("patient_id").notNull().references(() => users.id),
+  lastVisitAt: timestamp("last_visit_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueTherapistPatient: unique().on(table.therapistId, table.patientId),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   moodScales: many(moodScales),
@@ -195,6 +204,19 @@ export const therapistExercisesRelations = relations(therapistExercises, ({ one 
   }),
 }));
 
+export const therapistPatientVisitsRelations = relations(therapistPatientVisits, ({ one }) => ({
+  therapist: one(users, {
+    fields: [therapistPatientVisits.therapistId],
+    references: [users.id],
+    relationName: "therapist",
+  }),
+  patient: one(users, {
+    fields: [therapistPatientVisits.patientId],
+    references: [users.id],
+    relationName: "patient",
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -235,6 +257,10 @@ export const insertTherapistExerciseSchema = createInsertSchema(therapistExercis
   createdAt: true,
 });
 
+export const insertTherapistPatientVisitSchema = createInsertSchema(therapistPatientVisits).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -252,3 +278,5 @@ export type InsertTherapistPatient = z.infer<typeof insertTherapistPatientSchema
 export type TherapistExercise = typeof therapistExercises.$inferSelect;
 export type InsertTherapistExercise = z.infer<typeof insertTherapistExerciseSchema>;
 export type SharedData = typeof sharedData.$inferSelect;
+export type TherapistPatientVisit = typeof therapistPatientVisits.$inferSelect;
+export type InsertTherapistPatientVisit = z.infer<typeof insertTherapistPatientVisitSchema>;
