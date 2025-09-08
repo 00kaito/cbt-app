@@ -453,11 +453,17 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Patient not found or not assigned to you" });
       }
 
-      // Update last visit timestamp when therapist views patient details
-      await storage.updateTherapistPatientVisit(req.user!.id, patientId);
+      // Try to update last visit timestamp, but don't fail if it doesn't work
+      try {
+        await storage.updateTherapistPatientVisit(req.user!.id, patientId);
+      } catch (visitError) {
+        console.error("Failed to update visit timestamp:", visitError);
+        // Continue anyway - this is not critical for viewing patient details
+      }
       
       res.json(patient);
     } catch (error) {
+      console.error("Failed to fetch patient details:", error);
       res.status(500).json({ message: "Failed to fetch patient details" });
     }
   });
