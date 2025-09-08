@@ -1,16 +1,42 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, Clock, TrendingUp, Brain } from "lucide-react";
+import { CheckCircle, Clock, TrendingUp, Brain, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { ExerciseCompletion, Exercise, TherapistExercise } from "@shared/schema";
+import { pl } from "date-fns/locale";
+import { ExerciseCompletion, Exercise, TherapistExercise, AbcSchema } from "@shared/schema";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type CompletedExercise = ExerciseCompletion & { exercise: Exercise | TherapistExercise };
 
 export default function CompletedExercises() {
+  const [selectedAbcSchema, setSelectedAbcSchema] = useState<AbcSchema | null>(null);
+  const [abcModalOpen, setAbcModalOpen] = useState(false);
+  
   const { data: completedExercises, isLoading } = useQuery<CompletedExercise[]>({
     queryKey: ["/api/exercise-completions-with-exercise"],
   });
+
+  const handleViewAbcSchema = async (abcSchemaId: string) => {
+    try {
+      const response = await fetch(`/api/abc-schemas/${abcSchemaId}`);
+      if (response.ok) {
+        const abcSchema = await response.json();
+        setSelectedAbcSchema(abcSchema);
+        setAbcModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch ABC schema:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -99,6 +125,27 @@ export default function CompletedExercises() {
                   </p>
                 </div>
 
+                {/* ABC Schema Link */}
+                {completion.abcSchemaId && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">Powiązane z zapisem myślowym ABC</p>
+                        <p className="text-xs text-blue-700">To ćwiczenie zostało wykonane w ramach analizy wzorców myślowych</p>
+                      </div>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewAbcSchema(completion.abcSchemaId!)}
+                        className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Zobacz ABC
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mood Change & Metadata */}
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <div className="flex items-center gap-4">
@@ -114,18 +161,18 @@ export default function CompletedExercises() {
                           }`} 
                         />
                         <span className="text-sm text-muted-foreground" data-testid="mood-change">
-                          Mood: {completion.moodBefore} → {completion.moodAfter}
+                          Nastrój: {completion.moodBefore} → {completion.moodAfter}
                         </span>
                       </div>
                     )}
                     {completion.effectiveness !== undefined && (
                       <Badge variant="secondary" data-testid="effectiveness">
-                        {Math.round(completion.effectiveness * 100)}% effective
+                        {Math.round(completion.effectiveness * 100)}% skuteczności
                       </Badge>
                     )}
                   </div>
                   <span className="text-xs text-muted-foreground" data-testid="completion-date">
-                    {format(new Date(completion.completedAt), "MMM d, yyyy 'at' h:mm a")}
+                    {format(new Date(completion.completedAt), "dd.MM.yyyy HH:mm", { locale: pl })}
                   </span>
                 </div>
               </div>
@@ -133,6 +180,86 @@ export default function CompletedExercises() {
           </div>
         )}
       </CardContent>
+
+      {/* ABC Schema Modal */}
+      <Dialog open={abcModalOpen} onOpenChange={setAbcModalOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Powiązany zapis myślowy ABC</DialogTitle>
+            <DialogDescription>
+              Szczegóły zapisu ABC, który doprowadził do wykonania ćwiczenia
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAbcSchema && (
+            <div className="space-y-6">
+              {/* ABC Schema Content */}
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                      <span className="text-primary font-semibold text-sm">A</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Zdarzenie wyzwalające</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.activatingEvent}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
+                      <span className="text-secondary font-semibold text-sm">B</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Przekonania i myśli</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.beliefs}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <span className="text-accent font-semibold text-sm">C</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Konsekwencje</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.consequences}
+                  </p>
+                </div>
+              </div>
+
+              {selectedAbcSchema.analysisResults && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="font-semibold text-foreground">Wyniki analizy AI</h3>
+                  
+                  {selectedAbcSchema.analysisResults.distortions?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-foreground mb-2">Wykryte zniekształcenia:</h4>
+                      <div className="space-y-2">
+                        {selectedAbcSchema.analysisResults.distortions.map((distortion, index) => (
+                          <div key={index} className="bg-destructive/10 border border-destructive/20 rounded p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-foreground">{distortion.type}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {Math.round(distortion.confidence * 100)}% pewności
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">{distortion.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

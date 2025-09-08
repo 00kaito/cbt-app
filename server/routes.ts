@@ -196,6 +196,21 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/abc-schemas/:id/exercises", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const schema = await storage.getAbcSchema(req.params.id);
+      if (!schema || schema.userId !== req.user!.id) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+      
+      const exerciseCompletions = await storage.getExerciseCompletionsByAbcSchema(req.params.id);
+      res.json(exerciseCompletions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise completions" });
+    }
+  });
+
   // Exercise routes
   app.get("/api/exercises", async (req, res) => {
     try {

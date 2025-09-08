@@ -54,6 +54,11 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
     queryKey: ["/api/exercises"],
   });
 
+  const { data: relatedExercises } = useQuery<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]>({
+    queryKey: ["/api/abc-schemas", selectedSchema?.id, "exercises"],
+    enabled: !!selectedSchema?.id && viewModalOpen,
+  });
+
   const deleteAbcSchemaMutation = useMutation({
     mutationFn: async (schemaId: string) => {
       await apiRequest("DELETE", `/api/abc-schemas/${schemaId}`);
@@ -164,6 +169,7 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
       response: string;
       moodBefore: number;
       moodAfter: number;
+      abcSchemaId?: string;
     }) => {
       const res = await apiRequest("POST", "/api/exercise-completions", data);
       return res.json();
@@ -454,6 +460,44 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                 </div>
               )}
 
+              {/* Related Exercise Completions */}
+              {relatedExercises && relatedExercises.length > 0 && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="font-semibold text-foreground">Wykonane ćwiczenia powiązane z tym zapisem</h3>
+                  <div className="space-y-3">
+                    {relatedExercises.map((completion) => (
+                      <div key={completion.id} className="bg-primary/5 border border-primary/20 rounded p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground">{completion.exercise.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">{completion.exercise.description}</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                Nastrój przed: {completion.moodBefore}/7
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Nastrój po: {completion.moodAfter}/7
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(completion.completedAt), "dd.MM.yyyy HH:mm", { locale: pl })}
+                              </span>
+                            </div>
+                            {completion.response && (
+                              <div className="mt-2">
+                                <p className="text-sm font-medium text-foreground">Odpowiedź:</p>
+                                <p className="text-sm text-muted-foreground bg-muted/30 p-2 rounded mt-1">
+                                  {completion.response}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 {selectedSchema && !selectedSchema.sharedWithTherapist && (
@@ -481,7 +525,12 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
           setExerciseModalOpen(false);
           setSelectedExercise(null);
         }}
-        onComplete={completeExerciseMutation.mutate}
+        onComplete={(data) => {
+          completeExerciseMutation.mutate({
+            ...data,
+            abcSchemaId: selectedSchema?.id
+          });
+        }}
         isLoading={completeExerciseMutation.isPending}
       />
     </>

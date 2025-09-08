@@ -2,18 +2,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Clock, Play, BookOpen, CheckCircle, Calendar } from "lucide-react";
+import { Clock, Play, BookOpen, CheckCircle, Calendar, Eye } from "lucide-react";
 import { Link } from "wouter";
-import { TherapistExercise, ExerciseCompletion } from "@shared/schema";
+import { TherapistExercise, ExerciseCompletion, AbcSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import ExerciseCompletionModal from "./exercise-completion-modal";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ExerciseLibrary() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedExercise, setSelectedExercise] = useState<TherapistExercise | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAbcSchema, setSelectedAbcSchema] = useState<AbcSchema | null>(null);
+  const [abcModalOpen, setAbcModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: exercises } = useQuery<TherapistExercise[]>({

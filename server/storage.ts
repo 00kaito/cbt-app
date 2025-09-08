@@ -396,7 +396,7 @@ export class DatabaseStorage implements IStorage {
     return completionsWithExercise.filter(Boolean) as (ExerciseCompletion & { exercise: Exercise | TherapistExercise })[];
   }
 
-  async createExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion> {
+  async createExerciseCompletion(completion: InsertExerciseCompletion & { abcSchemaId?: string }): Promise<ExerciseCompletion> {
     const [created] = await db
       .insert(exerciseCompletions)
       .values(completion)
@@ -501,7 +501,7 @@ export class DatabaseStorage implements IStorage {
     return !!result;
   }
 
-  async createTherapistExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion> {
+  async createTherapistExerciseCompletion(completion: InsertExerciseCompletion & { abcSchemaId?: string }): Promise<ExerciseCompletion> {
     // Calculate effectiveness if both before and after moods are provided
     if (completion.moodBefore && completion.moodAfter) {
       const improvement = completion.moodAfter - completion.moodBefore;
@@ -520,6 +520,7 @@ export class DatabaseStorage implements IStorage {
         moodAfter: completion.moodAfter,
         effectiveness: completion.effectiveness,
         notes: completion.notes,
+        abcSchemaId: completion.abcSchemaId,
       })
       .returning();
     
@@ -575,6 +576,50 @@ export class DatabaseStorage implements IStorage {
       abcSchemas: sharedAbcSchemas.map(item => item.abcSchema),
       exerciseCompletions: sharedExerciseCompletions.map(item => item.exerciseCompletion),
     };
+  }
+
+  async getExerciseCompletionsByAbcSchema(abcSchemaId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]> {
+    // Get all exercise completions for this ABC schema
+    const completions = await db
+      .select()
+      .from(exerciseCompletions)
+      .where(eq(exerciseCompletions.abcSchemaId, abcSchemaId))
+      .orderBy(desc(exerciseCompletions.completedAt));
+
+    // For each completion, try to find the exercise
+    const completionsWithExercise = await Promise.all(
+      completions.map(async (completion) => {
+        // Try to find in therapist_exercises first
+        const [therapistExercise] = await db
+          .select()
+          .from(therapistExercises)
+          .where(eq(therapistExercises.id, completion.exerciseId));
+
+        if (therapistExercise) {
+          return {
+            ...completion,
+            exercise: therapistExercise
+          };
+        }
+
+        // Fallback to regular exercises table
+        const [exercise] = await db
+          .select()
+          .from(exercises)
+          .where(eq(exercises.id, completion.exerciseId));
+
+        if (exercise) {
+          return {
+            ...completion,
+            exercise: exercise
+          };
+        }
+
+        return null;
+      })
+    );
+
+    return completionsWithExercise.filter(Boolean) as (ExerciseCompletion & { exercise: Exercise | TherapistExercise })[];
   }
 }
 

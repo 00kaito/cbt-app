@@ -76,13 +76,14 @@ export const exercises = pgTable("exercises", {
 export const exerciseCompletions = pgTable("exercise_completions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  exerciseId: varchar("exercise_id").notNull(),
+  exerciseId: text("exercise_id").notNull(), // Changed back to text as it's not a foreign key
   response: text("response"), // user's exercise response/completion text
   moodBefore: integer("mood_before"),
   moodAfter: integer("mood_after"),
   effectiveness: real("effectiveness"), // calculated improvement
   notes: text("notes"),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
+  abcSchemaId: varchar("abc_schema_id").references(() => abcSchemas.id),
 });
 
 export const therapistPatients = pgTable("therapist_patients", {
@@ -144,11 +145,12 @@ export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
   }),
 }));
 
-export const abcSchemasRelations = relations(abcSchemas, ({ one }) => ({
+export const abcSchemasRelations = relations(abcSchemas, ({ one, many }) => ({
   user: one(users, {
     fields: [abcSchemas.userId],
     references: [users.id],
   }),
+  exerciseCompletions: many(exerciseCompletions),
 }));
 
 export const exercisesRelations = relations(exercises, ({ many }) => ({
@@ -159,6 +161,10 @@ export const exerciseCompletionsRelations = relations(exerciseCompletions, ({ on
   user: one(users, {
     fields: [exerciseCompletions.userId],
     references: [users.id],
+  }),
+  abcSchema: one(abcSchemas, {
+    fields: [exerciseCompletions.abcSchemaId],
+    references: [abcSchemas.id],
   }),
 }));
 
