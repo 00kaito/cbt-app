@@ -36,14 +36,14 @@ export default function TherapistDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/therapist/exercises"] });
       setIsExerciseModalOpen(false);
       toast({
-        title: "Exercise created!",
-        description: "The exercise has been assigned to the selected patient.",
+        title: "Ćwiczenie utworzone!",
+        description: "Ćwiczenie zostało przypisane wybranemu pacjentowi.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to create exercise. Please try again.",
+        title: "Błąd",
+        description: "Nie udało się utworzyć ćwiczenia. Spróbuj ponownie.",
         variant: "destructive",
       });
     },
@@ -128,7 +128,7 @@ export default function TherapistDashboard() {
             <div className="bg-muted/20 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <Users className="h-5 w-5 text-destructive" />
-                <h3 className="font-medium text-foreground">Need Attention</h3>
+                <h3 className="font-medium text-foreground">Wymagają uwagi</h3>
               </div>
               <p className="text-2xl font-bold text-foreground mt-2" data-testid="stat-need-attention">
                 0
@@ -139,7 +139,7 @@ export default function TherapistDashboard() {
 
         {/* Patients Grid */}
         <section>
-          <h2 className="text-xl font-semibold text-foreground mb-6">Your Patients</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-6">Twoi pacjenci</h2>
           
           {isLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -154,14 +154,14 @@ export default function TherapistDashboard() {
               <CardContent className="pt-6 text-center">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2" data-testid="text-no-patients">
-                  No patients yet
+                  Brak pacjentów
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Start building your patient list by adding your first patient.
+                  Rozpocznij budowanie listy pacjentów, dodając pierwszego pacjenta.
                 </p>
                 <Button data-testid="button-add-first-patient">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add First Patient
+                  Dodaj pierwszego pacjenta
                 </Button>
               </CardContent>
             </Card>
@@ -186,25 +186,25 @@ export default function TherapistDashboard() {
                       </div>
                       <div className="flex items-center space-x-1">
                         <div className="w-2 h-2 bg-accent rounded-full"></div>
-                        <span className="text-xs text-muted-foreground">Active</span>
+                        <span className="text-xs text-muted-foreground">Aktywny</span>
                       </div>
                     </div>
                     
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last session:</span>
-                        <span className="text-foreground">No sessions yet</span>
+                        <span className="text-muted-foreground">Ostatnia sesja:</span>
+                        <span className="text-foreground">Brak sesji</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Current mood:</span>
+                        <span className="text-muted-foreground">Obecny nastrój:</span>
                         <span className="text-foreground flex items-center">
                           <span className="w-2 h-2 bg-muted rounded-full mr-1"></span>
-                          Not tracked
+                          Nie śledzony
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Shared items:</span>
-                        <span className="text-primary font-medium">0 new</span>
+                        <span className="text-muted-foreground">Udostępnione elementy:</span>
+                        <span className="text-primary font-medium">0 nowych</span>
                       </div>
                     </div>
 
@@ -216,7 +216,7 @@ export default function TherapistDashboard() {
                           className="w-full" 
                           data-testid={`button-view-progress-${patient.id}`}
                         >
-                          View Progress
+                          Zobacz postępy
                         </Button>
                       </Link>
                       <Button 
@@ -225,7 +225,7 @@ export default function TherapistDashboard() {
                         className="flex-1" 
                         data-testid={`button-schedule-${patient.id}`}
                       >
-                        Schedule
+                        Zaplanuj
                       </Button>
                     </div>
                   </CardContent>
@@ -238,13 +238,13 @@ export default function TherapistDashboard() {
         {/* Exercise Management Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-foreground">Exercise Management</h2>
+            <h2 className="text-xl font-semibold text-foreground">Zarządzanie ćwiczeniami</h2>
             <Button 
               onClick={() => setIsExerciseModalOpen(true)}
               data-testid="button-create-exercise"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Exercise
+              Utwórz ćwiczenie
             </Button>
           </div>
           

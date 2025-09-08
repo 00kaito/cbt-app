@@ -42,14 +42,14 @@ export default function AIAnalysis() {
       setModalOpen(false);
       setSelectedExercise(null);
       toast({
-        title: "Exercise completed!",
-        description: "Your progress has been saved.",
+        title: "Ćwiczenie ukończone!",
+        description: "Twój postęp został zapisany.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to save exercise completion.",
+        title: "Błąd",
+        description: "Nie udało się zapisać ukończenia ćwiczenia.",
         variant: "destructive",
       });
     },
@@ -116,10 +116,10 @@ export default function AIAnalysis() {
         </div>
         <div>
           <h2 className="text-xl font-semibold text-foreground" data-testid="text-ai-analysis-title">
-            AI Analysis Results
+            Wyniki analizy AI
           </h2>
           <p className="text-sm text-muted-foreground">
-            Cognitive patterns identified in your thought record
+            Wzorce poznawcze zidentyfikowane w Twoim zapisie myślowym
           </p>
         </div>
       </div>
@@ -128,12 +128,12 @@ export default function AIAnalysis() {
         {/* Identified Distortions */}
         <div className="space-y-4">
           <h3 className="font-medium text-foreground" data-testid="text-distortions-title">
-            Identified Thought Patterns
+            Zidentyfikowane wzorce myślowe
           </h3>
           {distortions.length === 0 ? (
             <div className="bg-muted/30 rounded-lg p-4 text-center">
               <p className="text-muted-foreground" data-testid="text-no-distortions">
-                No significant cognitive distortions detected.
+                Nie wykryto znaczących zniekształceń poznawczych.
               </p>
             </div>
           ) : (
@@ -148,7 +148,7 @@ export default function AIAnalysis() {
                       <div className="flex items-center space-x-2 mb-1">
                         <h4 className="font-medium text-foreground">{distortion.type}</h4>
                         <Badge variant="outline" className="text-xs">
-                          {Math.round(distortion.confidence * 100)}% confidence
+                          {Math.round(distortion.confidence * 100)}% pewności
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{distortion.description}</p>
@@ -163,12 +163,12 @@ export default function AIAnalysis() {
         {/* Recommended Exercises */}
         <div className="space-y-4">
           <h3 className="font-medium text-foreground" data-testid="text-recommendations-title">
-            Recommended Exercises
+            Rekomendowane ćwiczenia
           </h3>
           {recommendations.length === 0 ? (
             <div className="bg-muted/30 rounded-lg p-4 text-center">
               <p className="text-muted-foreground" data-testid="text-no-recommendations">
-                No specific exercises recommended at this time.
+                W tej chwili nie ma żadnych konkretnych ćwiczeń do polecenia.
               </p>
             </div>
           ) : (
@@ -186,7 +186,7 @@ export default function AIAnalysis() {
                           15 min
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {Math.round(rec.effectiveness * 100)}% effectiveness
+                          {Math.round(rec.effectiveness * 100)}% skuteczność
                         </span>
                       </div>
                     </div>
@@ -196,7 +196,7 @@ export default function AIAnalysis() {
                       onClick={() => handleStartExercise(rec.exerciseId)}
                       data-testid={`button-start-exercise-${index}`}
                     >
-                      Start
+                      Rozpocznij
                     </Button>
                   </div>
                 </div>
@@ -209,10 +209,10 @@ export default function AIAnalysis() {
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="text-sm text-muted-foreground flex items-center">
           <Info className="h-4 w-4 mr-1" />
-          These suggestions are based on cognitive behavioral therapy principles
+          Te sugestie są oparte na zasadach terapii poznawczo-behawioralnej
         </div>
         <Button variant="ghost" size="sm" data-testid="button-view-exercise-library">
-          View Exercise Library <ArrowRight className="h-4 w-4 ml-1" />
+          Zobacz bibliotekę ćwiczeń <ArrowRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
 

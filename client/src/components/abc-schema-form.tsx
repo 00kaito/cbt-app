@@ -76,13 +76,13 @@ export default function ABCSchemaForm() {
       await apiRequest("POST", `/api/abc-schemas/${schemaId}/analyze`);
       queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
       toast({
-        title: "Analysis complete",
-        description: "Your thought patterns have been analyzed.",
+        title: "Analiza zakończona",
+        description: "Twoje wzorce myślowe zostały przeanalizowane.",
       });
     } catch (error) {
       toast({
-        title: "Analysis failed",
-        description: "Could not analyze thought patterns. Please try again.",
+        title: "Analiza nie powiodła się",
+        description: "Nie udało się przeanalizować wzorców myślowych. Spróbuj ponownie.",
         variant: "destructive",
       });
     } finally {
@@ -93,8 +93,8 @@ export default function ABCSchemaForm() {
   const handleSubmit = () => {
     if (!formData.activatingEvent || !formData.beliefs || !formData.consequences) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all three sections (A, B, C).",
+        title: "Brakuje informacji",
+        description: "Proszę wypełnić wszystkie trzy sekcje (A, B, C).",
         variant: "destructive",
       });
       return;
@@ -110,8 +110,8 @@ export default function ABCSchemaForm() {
   const handleShareWithTherapist = () => {
     if (!lastCreatedSchemaId) {
       toast({
-        title: "No schema to share",
-        description: "Please save your ABC schema first before sharing.",
+        title: "Brak schematu do udostępnienia",
+        description: "Proszę najpierw zapisać schemat ABC przed udostępnieniem.",
         variant: "destructive",
       });
       return;
@@ -119,8 +119,8 @@ export default function ABCSchemaForm() {
 
     if (!assignedTherapists || assignedTherapists.length === 0) {
       toast({
-        title: "No therapist assigned",
-        description: "Please assign a therapist in Settings before sharing.",
+        title: "Nie przypisano terapeuty",
+        description: "Proszę przypisać terapeutę w Ustawieniach przed udostępnieniem.",
         variant: "destructive",
       });
       return;
@@ -136,10 +136,10 @@ export default function ABCSchemaForm() {
     >
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground" data-testid="text-abc-title">
-          ABC Thought Record
+          Zapis myślowy ABC
         </h2>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-muted-foreground">Before:</span>
+          <span className="text-sm text-muted-foreground">Przed:</span>
           <Badge variant="destructive" data-testid="badge-mood-before">
             {formData.moodBefore}/10
           </Badge>
@@ -153,11 +153,11 @@ export default function ABCSchemaForm() {
             <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
               <span className="text-primary font-semibold text-sm">A</span>
             </div>
-            <h3 className="font-medium text-foreground">Activating Event</h3>
+            <h3 className="font-medium text-foreground">Zdarzenie wyzwalające</h3>
           </div>
-          <p className="text-sm text-muted-foreground">What happened? Describe the situation or event.</p>
+          <p className="text-sm text-muted-foreground">Co się stało? Opisz sytuację lub zdarzenie.</p>
           <Textarea
-            placeholder="Describe what happened that triggered your thoughts and emotions..."
+            placeholder="Opisz co się stało, co wywołało Twoje myśli i emocje..."
             value={formData.activatingEvent}
             onChange={(e) => setFormData(prev => ({ ...prev, activatingEvent: e.target.value }))}
             className="min-h-[100px]"
@@ -171,11 +171,11 @@ export default function ABCSchemaForm() {
             <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
               <span className="text-secondary font-semibold text-sm">B</span>
             </div>
-            <h3 className="font-medium text-foreground">Beliefs & Thoughts</h3>
+            <h3 className="font-medium text-foreground">Przekonania i myśli</h3>
           </div>
-          <p className="text-sm text-muted-foreground">What thoughts went through your mind?</p>
+          <p className="text-sm text-muted-foreground">Jakie myśli przeszły przez Twój umysł?</p>
           <Textarea
-            placeholder="What thoughts, interpretations, or beliefs came to mind? What did you tell yourself?"
+            placeholder="Jakie myśli, interpretacje lub przekonania przyszły Ci do głowy? Co sobie powiedziałeś?"
             value={formData.beliefs}
             onChange={(e) => setFormData(prev => ({ ...prev, beliefs: e.target.value }))}
             className="min-h-[100px]"
@@ -189,13 +189,13 @@ export default function ABCSchemaForm() {
             <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
               <span className="text-accent font-semibold text-sm">C</span>
             </div>
-            <h3 className="font-medium text-foreground">Consequences</h3>
+            <h3 className="font-medium text-foreground">Konsekwencje</h3>
           </div>
-          <p className="text-sm text-muted-foreground">How did you feel and behave?</p>
+          <p className="text-sm text-muted-foreground">Jak się czułeś i jak się zachowałeś?</p>
           <Textarea
-            placeholder="Emotions: How did you feel?
-Physical: Any physical sensations?
-Behavior: What did you do?"
+            placeholder="Emocje: Jak się czułeś?
+Fizyczne: Czy były jakieś doznania fizyczne?
+Zachowanie: Co robiłeś?"
             value={formData.consequences}
             onChange={(e) => setFormData(prev => ({ ...prev, consequences: e.target.value }))}
             className="min-h-[100px]"
@@ -212,7 +212,7 @@ Behavior: What did you do?"
             data-testid="button-analyze-abc"
           >
             <Search className="h-4 w-4 mr-2" />
-            {isAnalyzing ? "Analyzing..." : "Analyze Thoughts"}
+            {isAnalyzing ? "Analizowanie..." : "Analizuj myśli"}
           </Button>
           <Button 
             variant="outline"
@@ -221,7 +221,7 @@ Behavior: What did you do?"
             data-testid="button-save-draft"
           >
             <Save className="h-4 w-4 mr-2" />
-            Save Draft
+            Zapisz szkic
           </Button>
         </div>
         <Button 
@@ -232,7 +232,7 @@ Behavior: What did you do?"
           data-testid="button-share-therapist"
         >
           <Share className="h-4 w-4 mr-2" />
-          {shareWithTherapistMutation.isPending ? "Sharing..." : "Share with Therapist"}
+          {shareWithTherapistMutation.isPending ? "Udostępnianie..." : "Udostępnij terapeucie"}
         </Button>
       </div>
     </section>

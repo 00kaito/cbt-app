@@ -101,7 +101,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
                     <div className="bg-white border rounded p-2 shadow-lg">
                       <p className="text-sm font-medium">{data.fullDate}</p>
                       <p className="text-sm" style={{ color: getMoodColor(data.moodLevel) }}>
-                        Mood Level: {data.moodLevel}
+                        Poziom nastroju: {data.moodLevel}
                       </p>
                     </div>
                   );
@@ -161,7 +161,7 @@ export default function MoodChart({ moodEntries: propMoodEntries }: MoodChartPro
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle data-testid="text-mood-trends">Mood Trends</CardTitle>
+          <CardTitle data-testid="text-mood-trends">Trendy nastroju</CardTitle>
           <div className="flex space-x-2">
             <Button 
               variant={timeRange === '7d' ? 'default' : 'outline'} 

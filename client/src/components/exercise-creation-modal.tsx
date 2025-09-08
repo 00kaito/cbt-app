@@ -18,11 +18,11 @@ import { z } from "zod";
 
 // Form schema for creating exercises
 const exerciseFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"), 
-  instructions: z.string().min(1, "Instructions are required"),
-  category: z.string().min(1, "Category is required"),
-  patientId: z.string().min(1, "Patient must be selected"),
+  title: z.string().min(1, "Tytuł jest wymagany"),
+  description: z.string().min(1, "Opis jest wymagany"), 
+  instructions: z.string().min(1, "Instrukcje są wymagane"),
+  category: z.string().min(1, "Kategoria jest wymagana"),
+  patientId: z.string().min(1, "Pacjent musi być wybrany"),
   estimatedDuration: z.number().min(1).max(120),
   difficulty: z.enum(["easy", "medium", "hard"]),
 });
@@ -38,19 +38,19 @@ interface ExerciseCreationModalProps {
 }
 
 const categories = [
-  "Thought Challenging",
-  "Cognitive Restructuring", 
-  "Mindfulness",
-  "Relaxation",
-  "Behavioral Activation",
-  "Exposure Therapy",
-  "Other"
+  "Kwestionowanie myśli",
+  "Restrukturyzacja poznawcza", 
+  "Uważność",
+  "Relaksacja",
+  "Aktywacja behawioralna",
+  "Terapia ekspozycyjna",
+  "Inne"
 ];
 
 const difficulties = [
-  { value: "easy", label: "Easy" },
-  { value: "medium", label: "Medium" },
-  { value: "hard", label: "Hard" }
+  { value: "easy", label: "Łatwy" },
+  { value: "medium", label: "Średni" },
+  { value: "hard", label: "Trudny" }
 ];
 
 export default function ExerciseCreationModal({
@@ -89,9 +89,9 @@ export default function ExerciseCreationModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-create-exercise">
         <DialogHeader>
-          <DialogTitle>Create New Exercise</DialogTitle>
+          <DialogTitle>Utwórz nowe ćwiczenie</DialogTitle>
           <DialogDescription>
-            Create a custom therapeutic exercise to assign to a specific patient.
+            Utwórz niestandardowe ćwiczenie terapeutyczne do przypisania konkretnemu pacjentowi.
           </DialogDescription>
         </DialogHeader>
 
@@ -103,10 +103,10 @@ export default function ExerciseCreationModal({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Exercise Title</FormLabel>
+                  <FormLabel>Tytuł ćwiczenia</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="e.g., Thought Challenging Exercise"
+                      placeholder="np. Ćwiczenie kwestionowania myśli"
                       data-testid="input-exercise-title"
                       {...field} 
                     />
@@ -122,10 +122,10 @@ export default function ExerciseCreationModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Opis</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Brief description of what this exercise aims to achieve..."
+                      placeholder="Krótki opis tego, co to ćwiczenie ma osiągnąć..."
                       rows={3}
                       data-testid="textarea-exercise-description"
                       {...field} 
@@ -142,10 +142,10 @@ export default function ExerciseCreationModal({
               name="instructions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Instructions</FormLabel>
+                  <FormLabel>Instrukcje</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Detailed step-by-step instructions for the patient..."
+                      placeholder="Szczegółowe instrukcje krok po kroku dla pacjenta..."
                       rows={4}
                       data-testid="textarea-exercise-instructions"
                       {...field} 
@@ -163,7 +163,7 @@ export default function ExerciseCreationModal({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Kategoria</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
@@ -171,7 +171,7 @@ export default function ExerciseCreationModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder="Wybierz kategorię" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -192,7 +192,7 @@ export default function ExerciseCreationModal({
                 name="difficulty"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Difficulty</FormLabel>
+                    <FormLabel>Trudność</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
@@ -200,7 +200,7 @@ export default function ExerciseCreationModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty" />
+                          <SelectValue placeholder="Wybierz trudność" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -224,7 +224,7 @@ export default function ExerciseCreationModal({
                 name="patientId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign to Patient</FormLabel>
+                    <FormLabel>Przypisz do pacjenta</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
@@ -232,7 +232,7 @@ export default function ExerciseCreationModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select patient" />
+                          <SelectValue placeholder="Wybierz pacjenta" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -253,7 +253,7 @@ export default function ExerciseCreationModal({
                 name="estimatedDuration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
+                    <FormLabel>Czas trwania (minuty)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number"
@@ -279,14 +279,14 @@ export default function ExerciseCreationModal({
                 onClick={handleClose}
                 data-testid="button-cancel-exercise"
               >
-                Cancel
+                Anuluj
               </Button>
               <Button 
                 type="submit" 
                 disabled={isLoading}
                 data-testid="button-save-exercise"
               >
-                {isLoading ? "Creating..." : "Create Exercise"}
+                {isLoading ? "Tworzenie..." : "Utwórz ćwiczenie"}
               </Button>
             </div>
           </form>

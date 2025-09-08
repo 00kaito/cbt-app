@@ -29,45 +29,45 @@ export async function analyzeABCSchema(
 ): Promise<ABCAnalysisResult> {
   try {
     const prompt = `
-    Analyze the following ABC thought record for cognitive distortions and provide recommendations:
+    Przeanalizuj następujący zapis myślowy ABC pod kątem zniekształceń poznawczych i udziel rekomendacji:
 
-    A (Activating Event): ${activatingEvent}
-    B (Beliefs/Thoughts): ${beliefs}
-    C (Consequences): ${consequences}
+    A (Zdarzenie wyzwalające): ${activatingEvent}
+    B (Przekonania/Myśli): ${beliefs}
+    C (Konsekwencje): ${consequences}
 
-    Please identify cognitive distortions present in the beliefs and provide exercise recommendations. 
-    Return a JSON object with this exact structure:
+    Proszę zidentyfikuj zniekształcenia poznawcze obecne w przekonaniach i podaj rekomendacje ćwiczeń. 
+    Zwróć obiekt JSON o dokładnie tej strukturze:
     {
       "distortions": [
         {
-          "type": "string (e.g., 'Catastrophizing', 'All-or-Nothing Thinking')",
-          "description": "string (brief explanation of how this distortion applies)",
-          "confidence": number (0-1, how confident you are this distortion is present)"
+          "type": "string (np. 'Katastrofizowanie', 'Myślenie wszystko albo nic')",
+          "description": "string (krótkie wyjaśnienie jak to zniekształcenie ma zastosowanie)",
+          "confidence": number (0-1, jak bardzo jesteś pewny że to zniekształcenie jest obecne)"
         }
       ],
       "recommendations": [
         {
-          "exerciseId": "string (ID of recommended exercise)",
-          "reason": "string (why this exercise is recommended)",
-          "effectiveness": number (0-1, expected effectiveness for this case)"
+          "exerciseId": "string (ID rekomendowanego ćwiczenia)",
+          "reason": "string (dlaczego to ćwiczenie jest rekomendowane)",
+          "effectiveness": number (0-1, oczekiwana skuteczność dla tego przypadku)"
         }
       ]
     }
 
-    Common cognitive distortions to look for:
-    - All-or-Nothing Thinking
-    - Overgeneralization
-    - Mental Filter
-    - Disqualifying the Positive
-    - Jumping to Conclusions
-    - Magnification/Minimization
-    - Emotional Reasoning
-    - Should Statements
-    - Labeling
-    - Personalization
-    - Catastrophizing
+    Powszechne zniekształcenia poznawcze do wyszukania:
+    - Myślenie wszystko albo nic
+    - Nadmiernie uogólnianie
+    - Filtr mentalny
+    - Dyskwalifikowanie pozytywów
+    - Wyciąganie pochopnych wniosków
+    - Powiększanie/Pomniejszanie
+    - Rozumowanie emocjonalne
+    - Stwierdzenia "powinienem"
+    - Etykietowanie
+    - Personalizacja
+    - Katastrofizowanie
 
-    Exercise IDs to recommend from:
+    ID ćwiczeń do polecenia:
     - "evidence-examination"
     - "balanced-thinking"
     - "thought-challenging"
@@ -76,6 +76,8 @@ export async function analyzeABCSchema(
     - "mindfulness-exercise"
     - "worry-time"
     - "pros-cons-analysis"
+    
+    Odpowiedź udziel w języku polskim.
     `;
 
     const response = await openai.chat.completions.create({
@@ -83,7 +85,7 @@ export async function analyzeABCSchema(
       messages: [
         {
           role: "system",
-          content: "You are a cognitive behavioral therapy expert who analyzes thought patterns and recommends appropriate interventions."
+          content: "Jesteś ekspertem terapii poznawczo-behawioralnej, który analizuje wzorce myślowe i rekomenduje odpowiednie interwencje. Odpowiadaj w języku polskim."
         },
         {
           role: "user",
@@ -111,10 +113,11 @@ export async function generateExerciseContent(
 ): Promise<string> {
   try {
     const prompt = `
-    Generate personalized content for a ${exerciseType} CBT exercise based on this user context:
+    Wygeneruj spersonalizowaną treść dla ćwiczenia CBT typu ${exerciseType} na podstawie tego kontekstu użytkownika:
     ${userContext}
 
-    Provide specific, actionable guidance tailored to their situation. Make it practical and easy to follow.
+    Podaj konkretne, praktyczne wskazówki dostosowane do ich sytuacji. Zrób to praktyczne i łatwe do wykonania.
+    Odpowiedz w języku polskim.
     `;
 
     const response = await openai.chat.completions.create({
@@ -122,7 +125,7 @@ export async function generateExerciseContent(
       messages: [
         {
           role: "system",
-          content: "You are a CBT therapist creating personalized exercises for patients."
+          content: "Jesteś terapeuą CBT tworzącym spersonalizowane ćwiczenia dla pacjentów. Odpowiadaj w języku polskim."
         },
         {
           role: "user",

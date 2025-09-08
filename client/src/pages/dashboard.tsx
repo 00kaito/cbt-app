@@ -29,7 +29,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">Jak się dzisiaj czujesz?</h2>
             <span className="text-sm text-muted-foreground" data-testid="text-current-date">
-              {format(new Date(), "MMMM d, yyyy")}
+              {new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
           </div>
           

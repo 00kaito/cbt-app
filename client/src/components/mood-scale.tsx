@@ -80,14 +80,14 @@ export default function MoodScale() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mood-entries"] });
       toast({
-        title: "Mood recorded",
-        description: "Your mood has been successfully tracked.",
+        title: "Nastrój zapisany",
+        description: "Twój nastrój został pomyślnie śledzony.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to record mood. Please try again.",
+        title: "Błąd",
+        description: "Nie udało się zapisać nastroju. Spróbuj ponownie.",
         variant: "destructive",
       });
     },
@@ -124,7 +124,7 @@ export default function MoodScale() {
     <>
       <div className="bg-muted/30 rounded-lg p-4 mb-4">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-muted-foreground">Current Mood Scale</span>
+          <span className="text-sm text-muted-foreground">Obecna skala nastroju</span>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -132,7 +132,7 @@ export default function MoodScale() {
             data-testid="button-customize-scale"
           >
             <Settings className="h-4 w-4 mr-1" />
-            Customize Scale
+            Dostosuj skalę
           </Button>
         </div>
         
@@ -217,10 +217,10 @@ export default function MoodScale() {
               <Lightbulb className="text-accent text-lg mt-0.5" />
               <div className="flex-1">
                 <h3 className="font-medium text-foreground mb-1" data-testid="text-mood-suggestion-title">
-                  Unusual mood detected
+                  Wykryto nietypowy nastrój
                 </h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Your mood seems different from your usual pattern. Would you like to explore what might have triggered this?
+                  Twój nastrój wydaje się różnić od Twojego zwykłego wzorca. Czy chciałbyś zbadać co mogło to spowodować?
                 </p>
                 <div className="flex space-x-2">
                   <Button 
@@ -239,7 +239,7 @@ export default function MoodScale() {
                     }}
                     data-testid="button-create-abc-schema"
                   >
-                    Create ABC Thought Record
+                    Utwórz zapis myślowy ABC
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -247,7 +247,7 @@ export default function MoodScale() {
                     onClick={() => setShowABCSuggestion(false)}
                     data-testid="button-dismiss-suggestion"
                   >
-                    Not now
+                    Nie teraz
                   </Button>
                 </div>
               </div>
