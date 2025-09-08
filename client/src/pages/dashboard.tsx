@@ -5,7 +5,6 @@ import ABCSchemaForm from "@/components/abc-schema-form";
 import AIAnalysis from "@/components/ai-analysis";
 import MoodChart from "@/components/mood-chart";
 import ExerciseLibrary from "@/components/exercise-library";
-import CompletedExercises from "@/components/completed-exercises";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -108,9 +107,6 @@ export default function Dashboard() {
         {/* AI Analysis */}
         <AIAnalysis />
 
-
-        {/* Completed Exercises */}
-        <CompletedExercises />
 
         {/* Exercise Library */}
         <ExerciseLibrary />

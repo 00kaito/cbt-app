@@ -128,6 +128,12 @@ export default function ExerciseLibrary() {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                {exercise.instructions && (
+                  <div className="mt-3 p-3 bg-muted/30 rounded-md">
+                    <h4 className="text-sm font-medium text-foreground mb-2">Instructions:</h4>
+                    <p className="text-sm text-foreground leading-relaxed">{exercise.instructions}</p>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
