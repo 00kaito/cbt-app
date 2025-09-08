@@ -183,7 +183,7 @@ export default function CompletedExercises() {
 
       {/* ABC Schema Modal */}
       <Dialog open={abcModalOpen} onOpenChange={setAbcModalOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Powiązany zapis myślowy ABC</DialogTitle>
             <DialogDescription>
