@@ -110,6 +110,39 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get single ABC schema by ID
+  app.get("/api/abc-schemas/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const schema = await storage.getAbcSchema(req.params.id);
+      
+      if (!schema) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+      
+      // Check if user has access to this schema
+      if (req.user!.role === "patient") {
+        // Patient can only access their own schemas
+        if (schema.userId !== req.user!.id) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      } else if (req.user!.role === "therapist") {
+        // Therapist can access schemas of their assigned patients
+        const patients = await storage.getTherapistPatients(req.user!.id);
+        const hasAccess = patients.some(patient => patient.id === schema.userId);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      }
+      
+      res.json(schema);
+    } catch (error) {
+      console.error("Error fetching ABC schema:", error);
+      res.status(500).json({ message: "Failed to fetch ABC schema" });
+    }
+  });
+
   app.post("/api/abc-schemas", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
