@@ -37,8 +37,8 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
 
   // Calculate chart dimensions
   const width = 100;
-  const height = 80;
-  const padding = 10;
+  const height = 60;
+  const padding = 15;
   
   // Scale Y values (mood levels 1-7) to chart height
   const scaleY = (level: number) => {
@@ -74,7 +74,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
       </div>
 
       {/* SVG Chart */}
-      <div className="relative h-40 w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-4">
+      <div className="relative h-80 w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6">
         <svg 
           viewBox={`0 0 ${width} ${height}`} 
           className="w-full h-full"
@@ -89,8 +89,8 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
               x2={width - padding}
               y2={scaleY(level)}
               stroke="currentColor"
-              strokeWidth="0.2"
-              className="text-muted-foreground/20"
+              strokeWidth="0.3"
+              className="text-muted-foreground/30"
             />
           ))}
           
@@ -99,7 +99,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
             d={pathData}
             fill="none"
             stroke="hsl(var(--primary))"
-            strokeWidth="1"
+            strokeWidth="2"
             className="drop-shadow-sm"
           />
           
@@ -111,7 +111,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
                 key={index}
                 cx={scaleX(point.x)}
                 cy={scaleY(point.y)}
-                r={isLast ? "1.5" : "1"}
+                r={isLast ? "2.5" : "1.5"}
                 fill={isLast ? "hsl(var(--primary))" : "hsl(var(--primary))"}
                 className={isLast ? "drop-shadow-md" : ""}
                 data-testid={`mood-point-${index}`}
@@ -123,12 +123,30 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-4 text-xs text-muted-foreground">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-6 text-sm text-muted-foreground">
           {[7, 6, 5, 4, 3, 2, 1].map(level => (
             <div key={level} className="flex items-center">
-              <span className="w-3 text-right">{level}</span>
+              <span className="w-4 text-right font-medium">{level}</span>
             </div>
           ))}
+        </div>
+
+        {/* X-axis labels */}
+        <div className="absolute bottom-0 left-6 right-6 flex justify-between text-xs text-muted-foreground py-2">
+          {chartData.length > 1 && chartData.map((point, index) => {
+            // Show only first, last, and some middle points to avoid crowding
+            const showLabel = index === 0 || 
+                             index === chartData.length - 1 || 
+                             (chartData.length > 4 && index === Math.floor(chartData.length / 2));
+            
+            if (!showLabel) return null;
+            
+            return (
+              <span key={index} className="text-center">
+                {point.date}
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>
