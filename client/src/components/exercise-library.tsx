@@ -72,36 +72,6 @@ export default function ExerciseLibrary() {
 
   return (
     <div className="space-y-8">
-      {/* Completed Exercises Section */}
-      {completions && completions.length > 0 && (
-        <section className="bg-card rounded-lg shadow-sm border border-border p-6">
-          <div className="mb-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-              <h2 className="text-xl font-semibold text-foreground" data-testid="text-completed-exercises">
-                Completed Exercises
-              </h2>
-            </div>
-            <p className="text-muted-foreground mt-2">
-              Review your progress and insights from completed exercises
-            </p>
-          </div>
-          
-          <div className="grid gap-4">
-            <div className="text-center py-6">
-              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-4">
-                You have {completions.length} completed exercise{completions.length !== 1 ? 's' : ''}.
-              </p>
-              <Link href="/completed-exercises">
-                <Button variant="outline" size="sm" data-testid="button-view-all-completed">
-                  View All Completed Exercises
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Available Exercises Section */}
       <section className="bg-card rounded-lg shadow-sm border border-border p-6">

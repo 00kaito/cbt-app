@@ -21,6 +21,7 @@ export default function Navigation() {
       ]
     : [
         { href: "/", label: "Dashboard", active: location === "/" },
+        { href: "/completed-exercises", label: "Completed Exercises", active: location === "/completed-exercises" },
         { href: "/settings", label: "Settings", active: location === "/settings" },
       ];
 
