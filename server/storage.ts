@@ -8,6 +8,7 @@ import {
   therapistPatients,
   therapistExercises,
   sharedData,
+  therapistPatientVisits,
   type User, 
   type InsertUser,
   type MoodScale,
@@ -23,7 +24,9 @@ import {
   type InsertTherapistPatient,
   type TherapistExercise,
   type InsertTherapistExercise,
-  type SharedData
+  type SharedData,
+  type TherapistPatientVisit,
+  type InsertTherapistPatientVisit
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc } from "drizzle-orm";
@@ -88,6 +91,13 @@ export interface IStorage {
     moodEntries: MoodEntry[];
     abcSchemas: AbcSchema[];
     exerciseCompletions: ExerciseCompletion[];
+  }>;
+
+  // Therapist visit tracking methods
+  updateTherapistPatientVisit(therapistId: string, patientId: string): Promise<void>;
+  getPatientSummaryForTherapist(patientId: string, therapistId: string): Promise<{
+    latestMood: { value: number; date: Date } | null;
+    newItemsSinceLastVisit: number;
   }>;
 }
 
@@ -690,6 +700,79 @@ export class DatabaseStorage implements IStorage {
     );
 
     return completionsWithExercise.filter(Boolean) as (ExerciseCompletion & { exercise: Exercise | TherapistExercise })[];
+  }
+
+  async updateTherapistPatientVisit(therapistId: string, patientId: string): Promise<void> {
+    await db
+      .insert(therapistPatientVisits)
+      .values({
+        therapistId,
+        patientId,
+        lastVisitAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [therapistPatientVisits.therapistId, therapistPatientVisits.patientId],
+        set: {
+          lastVisitAt: new Date(),
+        }
+      });
+  }
+
+  async getPatientSummaryForTherapist(patientId: string, therapistId: string): Promise<{
+    latestMood: { value: number; date: Date } | null;
+    newItemsSinceLastVisit: number;
+  }> {
+    // Get latest mood entry
+    const [latestMoodEntry] = await db
+      .select()
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, patientId))
+      .orderBy(desc(moodEntries.createdAt))
+      .limit(1);
+
+    // Get last visit timestamp
+    const [lastVisit] = await db
+      .select()
+      .from(therapistPatientVisits)
+      .where(and(
+        eq(therapistPatientVisits.therapistId, therapistId),
+        eq(therapistPatientVisits.patientId, patientId)
+      ));
+
+    let newItemsCount = 0;
+    
+    if (lastVisit) {
+      // Count new shared items since last visit
+      const newItems = await db
+        .select()
+        .from(sharedData)
+        .where(and(
+          eq(sharedData.therapistId, therapistId),
+          eq(sharedData.patientId, patientId),
+          sql`${sharedData.sharedAt} > ${lastVisit.lastVisitAt}`
+        ));
+      
+      newItemsCount = newItems.length;
+    } else {
+      // No previous visit, count all shared items
+      const allItems = await db
+        .select()
+        .from(sharedData)
+        .where(and(
+          eq(sharedData.therapistId, therapistId),
+          eq(sharedData.patientId, patientId)
+        ));
+      
+      newItemsCount = allItems.length;
+    }
+
+    return {
+      latestMood: latestMoodEntry ? {
+        value: latestMoodEntry.value,
+        date: latestMoodEntry.createdAt
+      } : null,
+      newItemsSinceLastVisit: newItemsCount
+    };
   }
 }
 

@@ -315,7 +315,20 @@ export function registerRoutes(app: Express): Server {
     }
     try {
       const patients = await storage.getTherapistPatients(req.user!.id);
-      res.json(patients);
+      
+      // Enrich each patient with summary data
+      const enrichedPatients = await Promise.all(
+        patients.map(async (patient) => {
+          const summary = await storage.getPatientSummaryForTherapist(patient.id, req.user!.id);
+          return {
+            ...patient,
+            latestMood: summary.latestMood,
+            newItemsSinceLastVisit: summary.newItemsSinceLastVisit
+          };
+        })
+      );
+      
+      res.json(enrichedPatients);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch patients" });
     }
@@ -419,6 +432,10 @@ export function registerRoutes(app: Express): Server {
       if (!patient) {
         return res.status(404).json({ message: "Patient not found or not assigned to you" });
       }
+
+      // Update last visit timestamp when therapist views patient details
+      await storage.updateTherapistPatientVisit(req.user!.id, patientId);
+      
       res.json(patient);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch patient details" });
