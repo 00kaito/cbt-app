@@ -12,6 +12,8 @@ export default function PatientDetail() {
   const { user } = useAuth();
   const params = useParams();
   const patientId = params.id;
+  
+  console.log("PatientDetail - params:", params, "patientId:", patientId);
 
   // Fetch patient details
   const { data: patient, isLoading: patientLoading } = useQuery({
