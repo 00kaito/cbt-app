@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { UserPlus, Users, TrendingUp, Calendar } from "lucide-react";
+import { Link } from "wouter";
 
 export default function TherapistDashboard() {
   const { user } = useAuth();
@@ -174,14 +175,16 @@ export default function TherapistDashboard() {
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1" 
-                        data-testid={`button-view-progress-${patient.id}`}
-                      >
-                        View Progress
-                      </Button>
+                      <Link href={`/therapist/patient/${patient.id}`} className="flex-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full" 
+                          data-testid={`button-view-progress-${patient.id}`}
+                        >
+                          View Progress
+                        </Button>
+                      </Link>
                       <Button 
                         variant="outline" 
                         size="sm" 

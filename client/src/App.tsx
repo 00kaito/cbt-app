@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import TherapistDashboard from "@/pages/therapist-dashboard";
+import PatientDetail from "@/pages/patient-detail";
 import Settings from "@/pages/settings";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/therapist" component={TherapistDashboard} />
+      <ProtectedRoute path="/therapist/patient/:id" component={PatientDetail} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
