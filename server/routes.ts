@@ -366,7 +366,7 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Patient not found or not assigned to you" });
       }
       
-      const completions = await storage.getExerciseCompletions(patientId);
+      const completions = await storage.getPatientExerciseCompletionsForTherapist(patientId);
       res.json(completions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch exercise completions" });

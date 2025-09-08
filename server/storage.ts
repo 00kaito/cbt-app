@@ -67,6 +67,7 @@ export interface IStorage {
   getTherapistPatients(therapistId: string): Promise<User[]>;
   getPatientTherapists(patientId: string): Promise<User[]>;
   addTherapistPatient(relationship: InsertTherapistPatient): Promise<TherapistPatient>;
+  getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
 
   // Shared data methods
   getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{
@@ -381,6 +382,20 @@ export class DatabaseStorage implements IStorage {
       .values(relationship)
       .returning();
     return created;
+  }
+
+  async getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]> {
+    const result = await db
+      .select()
+      .from(exerciseCompletions)
+      .innerJoin(exercises, eq(exerciseCompletions.exerciseId, exercises.id))
+      .where(eq(exerciseCompletions.userId, patientId))
+      .orderBy(desc(exerciseCompletions.completedAt));
+    
+    return result.map(row => ({
+      ...row.exercise_completions,
+      exercise: row.exercises
+    }));
   }
 
   async getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{

@@ -250,7 +250,7 @@ export default function PatientDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2" data-testid="text-exercise-completions">
                 <CheckCircle className="h-5 w-5" />
-                <span>Exercise Completions</span>
+                <span>Exercise Completions ({exerciseCompletions.length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -258,37 +258,83 @@ export default function PatientDetail() {
                 <div
                   key={completion.id}
                   className="border rounded-lg p-4 space-y-3"
+                  data-testid={`patient-exercise-completion-${completion.id}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-foreground">
-                      Exercise Completion
-                    </h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(completion.completedAt).toLocaleDateString('pl-PL')}
-                      </div>
-                      {completion.moodBefore && completion.moodAfter && (
-                        <div className="text-xs">
-                          Mood: {completion.moodBefore} → {completion.moodAfter}
-                          {completion.moodAfter > completion.moodBefore && (
-                            <span className="text-green-600 ml-1">↗</span>
-                          )}
-                        </div>
+                  {/* Exercise Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-foreground" data-testid="exercise-title">
+                        {completion.exercise?.title || "Exercise Completion"}
+                      </h3>
+                      {completion.exercise?.description && (
+                        <p className="text-sm text-muted-foreground mt-1" data-testid="exercise-description">
+                          {completion.exercise.description}
+                        </p>
                       )}
                     </div>
+                    <div className="flex flex-col items-end gap-1 ml-4">
+                      {completion.exercise?.category && (
+                        <Badge variant="outline" data-testid="exercise-category">
+                          {completion.exercise.category}
+                        </Badge>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(completion.completedAt).toLocaleDateString('pl-PL')}
+                      </div>
+                    </div>
                   </div>
-                  
-                  {completion.response && (
-                    <div className="bg-muted/30 p-3 rounded-md">
-                      <p className="text-sm text-foreground">
-                        {completion.response.length > 200 
-                          ? `${completion.response.substring(0, 200)}...` 
-                          : completion.response
-                        }
+
+                  {/* Exercise Instructions */}
+                  {completion.exercise?.instructions && (
+                    <div className="bg-muted/50 rounded-md p-3">
+                      <p className="text-sm font-medium text-foreground mb-2">Exercise Instructions:</p>
+                      <p className="text-sm text-muted-foreground" data-testid="exercise-instructions">
+                        {completion.exercise.instructions}
                       </p>
                     </div>
                   )}
+
+                  {/* Patient Response */}
+                  <div className="bg-accent/10 rounded-md p-3">
+                    <p className="text-sm font-medium text-foreground mb-2">Patient Response:</p>
+                    <p className="text-sm text-foreground" data-testid="patient-response">
+                      {completion.response}
+                    </p>
+                  </div>
+
+                  {/* Mood Change & Metadata */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <div className="flex items-center gap-4">
+                      {completion.moodBefore && completion.moodAfter && (
+                        <div className="flex items-center gap-2">
+                          <TrendingUp 
+                            className={`h-4 w-4 ${
+                              completion.moodAfter > completion.moodBefore 
+                                ? 'text-green-600' 
+                                : completion.moodAfter < completion.moodBefore 
+                                  ? 'text-red-600' 
+                                  : 'text-gray-600'
+                            }`} 
+                          />
+                          <span className="text-sm text-muted-foreground" data-testid="mood-change">
+                            Mood: {completion.moodBefore} → {completion.moodAfter}
+                          </span>
+                        </div>
+                      )}
+                      {completion.effectiveness !== undefined && (
+                        <Badge variant="secondary" data-testid="effectiveness">
+                          {Math.round(completion.effectiveness * 100)}% effective
+                        </Badge>
+                      )}
+                    </div>
+                    {completion.exercise?.estimatedDuration && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {completion.exercise.estimatedDuration}min
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </CardContent>
