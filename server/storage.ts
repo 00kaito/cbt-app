@@ -227,6 +227,58 @@ export class DatabaseStorage implements IStorage {
     await db.delete(abcSchemas).where(eq(abcSchemas.id, id));
   }
 
+  async getExerciseCompletionsByAbcSchemaId(abcSchemaId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]> {
+    const completions = await db
+      .select({
+        id: exerciseCompletions.id,
+        exerciseId: exerciseCompletions.exerciseId,
+        userId: exerciseCompletions.userId,
+        response: exerciseCompletions.response,
+        moodBefore: exerciseCompletions.moodBefore,
+        moodAfter: exerciseCompletions.moodAfter,
+        effectiveness: exerciseCompletions.effectiveness,
+        completedAt: exerciseCompletions.completedAt,
+        abcSchemaId: exerciseCompletions.abcSchemaId,
+      })
+      .from(exerciseCompletions)
+      .where(eq(exerciseCompletions.abcSchemaId, abcSchemaId))
+      .orderBy(desc(exerciseCompletions.completedAt));
+
+    // Get exercises for each completion
+    const completionsWithExercises = await Promise.all(
+      completions.map(async (completion) => {
+        // Try to get from therapist exercises first
+        let exercise = await db
+          .select()
+          .from(therapistExercises)
+          .where(eq(therapistExercises.id, completion.exerciseId))
+          .limit(1)
+          .then(rows => rows[0]);
+        
+        // If not found in therapist exercises, get from regular exercises
+        if (!exercise) {
+          exercise = await db
+            .select()
+            .from(exercises)
+            .where(eq(exercises.id, completion.exerciseId))
+            .limit(1)
+            .then(rows => rows[0]);
+        }
+        
+        return {
+          ...completion,
+          exercise: exercise || { 
+            id: completion.exerciseId, 
+            title: "Deleted Exercise", 
+            description: "This exercise no longer exists" 
+          }
+        };
+      })
+    );
+
+    return completionsWithExercises;
+  }
+
   async getExercises(): Promise<Exercise[]> {
     const dbExercises = await db.select().from(exercises).orderBy(asc(exercises.title));
     
