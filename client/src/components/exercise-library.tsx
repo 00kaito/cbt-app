@@ -7,33 +7,55 @@ import { Exercise } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import ExerciseCompletionModal from "./exercise-completion-modal";
 
 export default function ExerciseLibrary() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: exercises } = useQuery<Exercise[]>({
     queryKey: ["/api/exercises"],
   });
 
-  const startExerciseMutation = useMutation({
-    mutationFn: async (exerciseId: string) => {
-      // This would typically start an exercise session
-      // For now, we'll just record that the user started it
+  const completeExerciseMutation = useMutation({
+    mutationFn: async (data: {
+      exerciseId: string;
+      response: string;
+      moodBefore: number;
+      moodAfter: number;
+    }) => {
       const res = await apiRequest("POST", "/api/exercise-completions", {
-        exerciseId,
-        moodBefore: 4, // Default mood before
+        exerciseId: data.exerciseId,
+        response: data.response,
+        moodBefore: data.moodBefore,
+        moodAfter: data.moodAfter,
       });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/exercise-completions"] });
+      setModalOpen(false);
+      setSelectedExercise(null);
       toast({
-        title: "Exercise started",
-        description: "Good luck with your practice session!",
+        title: "Exercise completed!",
+        description: "Your progress has been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save exercise completion.",
+        variant: "destructive",
       });
     },
   });
+
+  const handleStartExercise = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setModalOpen(true);
+  };
 
   const mockExercises: Exercise[] = [
     {
@@ -171,18 +193,28 @@ export default function ExerciseLibrary() {
 
                 <Button 
                   className="w-full"
-                  onClick={() => startExerciseMutation.mutate(exercise.id)}
-                  disabled={startExerciseMutation.isPending}
+                  onClick={() => handleStartExercise(exercise)}
                   data-testid={`button-start-${exercise.id}`}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  {startExerciseMutation.isPending ? "Starting..." : "Start Exercise"}
+                  Start Exercise
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <ExerciseCompletionModal
+        exercise={selectedExercise}
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedExercise(null);
+        }}
+        onComplete={completeExerciseMutation.mutate}
+        isLoading={completeExerciseMutation.isPending}
+      />
     </section>
   );
 }
