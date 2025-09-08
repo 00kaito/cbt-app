@@ -287,6 +287,74 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get individual patient details for therapist
+  app.get("/api/therapist/patient/:patientId", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const patientId = req.params.patientId;
+      
+      // Verify this patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+      
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patient details" });
+    }
+  });
+
+  // Get patient's mood entries for therapist
+  app.get("/api/therapist/patient/:patientId/mood-entries", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const patientId = req.params.patientId;
+      
+      // Verify this patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+      
+      const moodEntries = await storage.getMoodEntries(patientId);
+      res.json(moodEntries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch mood entries" });
+    }
+  });
+
+  // Get shared data for specific patient
+  app.get("/api/therapist/patient/:patientId/shared-data", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const patientId = req.params.patientId;
+      
+      // Verify this patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+      
+      const sharedData = await storage.getSharedDataForTherapist(req.user!.id, patientId);
+      res.json(sharedData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch shared data" });
+    }
+  });
+
   app.get("/api/therapist/shared-data/:patientId", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== "therapist") {
       return res.sendStatus(403);
