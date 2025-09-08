@@ -202,16 +202,16 @@ export default function AuthPage() {
             <div className="flex items-center space-x-3 text-left">
               <Shield className="h-6 w-6 text-accent flex-shrink-0" />
               <div>
-                <h3 className="font-medium text-foreground">CBT Tools</h3>
-                <p className="text-sm text-muted-foreground">Practice evidence-based cognitive behavioral therapy exercises</p>
+                <h3 className="font-medium text-foreground">Narzędzia CBT</h3>
+                <p className="text-sm text-muted-foreground">Ćwicz ćwiczenia terapii poznawczo-behawioralnej opartej na dowodach</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 text-left">
               <Users className="h-6 w-6 text-accent flex-shrink-0" />
               <div>
-                <h3 className="font-medium text-foreground">Therapist Connection</h3>
-                <p className="text-sm text-muted-foreground">Share progress and collaborate with mental health professionals</p>
+                <h3 className="font-medium text-foreground">Połączenie z terapeutą</h3>
+                <p className="text-sm text-muted-foreground">Dziel się postępami i współpracuj ze specjalistami zdrowia psychicznego</p>
               </div>
             </div>
           </div>
