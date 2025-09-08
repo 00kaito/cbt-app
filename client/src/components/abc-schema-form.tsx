@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,39 @@ export default function ABCSchemaForm() {
     moodBefore: 3,
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastCreatedSchemaId, setLastCreatedSchemaId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Get assigned therapists
+  const { data: assignedTherapists } = useQuery({
+    queryKey: ["/api/patient/therapists"],
+  });
+
+  // Share with therapist mutation
+  const shareWithTherapistMutation = useMutation({
+    mutationFn: async (schemaId: string) => {
+      if (!assignedTherapists || assignedTherapists.length === 0) {
+        throw new Error("No therapist assigned. Please assign a therapist in Settings.");
+      }
+      
+      const therapistId = assignedTherapists[0].id; // Use first assigned therapist
+      const res = await apiRequest("POST", `/api/abc-schemas/${schemaId}/share`, { therapistId });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Shared with therapist",
+        description: "Your ABC schema has been shared with your therapist.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sharing failed",
+        description: error.message || "Failed to share with therapist. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const createAbcSchemaMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -24,6 +56,7 @@ export default function ABCSchemaForm() {
       return res.json();
     },
     onSuccess: (schema) => {
+      setLastCreatedSchemaId(schema.id);
       queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
       // Trigger analysis
       analyzeAbcSchema(schema.id);
@@ -72,6 +105,28 @@ export default function ABCSchemaForm() {
 
   const handleSaveDraft = () => {
     createAbcSchemaMutation.mutate(formData);
+  };
+
+  const handleShareWithTherapist = () => {
+    if (!lastCreatedSchemaId) {
+      toast({
+        title: "No schema to share",
+        description: "Please save your ABC schema first before sharing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!assignedTherapists || assignedTherapists.length === 0) {
+      toast({
+        title: "No therapist assigned",
+        description: "Please assign a therapist in Settings before sharing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    shareWithTherapistMutation.mutate(lastCreatedSchemaId);
   };
 
   return (
@@ -172,10 +227,12 @@ Behavior: What did you do?"
         <Button 
           variant="outline"
           className="bg-slate-100 text-slate-600 hover:bg-slate-200"
+          onClick={handleShareWithTherapist}
+          disabled={shareWithTherapistMutation.isPending || !lastCreatedSchemaId}
           data-testid="button-share-therapist"
         >
           <Share className="h-4 w-4 mr-2" />
-          Share with Therapist
+          {shareWithTherapistMutation.isPending ? "Sharing..." : "Share with Therapist"}
         </Button>
       </div>
     </section>
