@@ -179,6 +179,7 @@ export default function CustomScaleBuilder() {
   const [scaleLength, setScaleLength] = useState("7");
   const [levels, setLevels] = useState<MoodLevel[]>(defaultLevels);
   const [scaleName, setScaleName] = useState("My Custom Mood Scale");
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
   const createMoodScaleMutation = useMutation({
@@ -260,9 +261,10 @@ export default function CustomScaleBuilder() {
     if (levels.length < 10) {
       const newLevel: MoodLevel = {
         level: levels.length + 1,
-        emoji: "😐",
         title: `Level ${levels.length + 1}`,
-        description: "Custom mood level description"
+        description: "Custom mood level description",
+        behavioralIndicators: ["Custom behavior indicator"],
+        category: 'normal'
       };
       setLevels([...levels, newLevel]);
       setScaleLength((levels.length + 1).toString());
@@ -273,6 +275,44 @@ export default function CustomScaleBuilder() {
     setLevels(defaultLevels);
     setScaleLength("7");
     setScaleName("My Custom Mood Scale");
+  };
+
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", "");
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const newLevels = [...levels];
+    const draggedItem = newLevels[draggedIndex];
+    
+    // Remove the dragged item
+    newLevels.splice(draggedIndex, 1);
+    
+    // Insert at new position
+    newLevels.splice(dropIndex, 0, draggedItem);
+    
+    // Update level numbers to match new order
+    newLevels.forEach((level, index) => {
+      level.level = index + 1;
+    });
+    
+    setLevels(newLevels);
+    setDraggedIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleSave = () => {
@@ -345,8 +385,18 @@ export default function CustomScaleBuilder() {
             {levels.map((level, index) => (
               <div 
                 key={index} 
-                className="bg-muted/30 border border-border rounded-lg p-4 cursor-move"
+                draggable
+                className={`border border-border rounded-lg p-4 cursor-move transition-all ${
+                  draggedIndex === index ? 'opacity-50 scale-95' : 'opacity-100'
+                } ${level.category === 'depression' ? 'bg-red-50 border-red-200' :
+                  level.category === 'normal' ? 'bg-blue-50 border-blue-200' :
+                  level.category === 'elevation' ? 'bg-yellow-50 border-yellow-200' :
+                  'bg-orange-50 border-orange-200'}`}
                 data-testid={`scale-item-${index}`}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
               >
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
@@ -416,15 +466,26 @@ export default function CustomScaleBuilder() {
                     data-testid={`preview-item-${index}`}
                   >
                     <div className="flex items-center space-x-3">
-                      <span className="text-lg">{level.emoji}</span>
+                      <div className={`w-3 h-3 rounded-full ${
+                        level.category === 'depression' ? 'bg-red-500' :
+                        level.category === 'normal' ? 'bg-blue-500' :
+                        level.category === 'elevation' ? 'bg-yellow-500' :
+                        'bg-orange-500'
+                      }`}></div>
                       <div className="flex-1 text-left">
                         <div className="font-medium text-sm">{level.title}</div>
                         <div className="text-xs text-muted-foreground">
                           {level.description}
                         </div>
+                        {level.behavioralIndicators && level.behavioralIndicators.length > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            • {level.behavioralIndicators.slice(0, 2).join(', ')}
+                            {level.behavioralIndicators.length > 2 && ` +${level.behavioralIndicators.length - 2} więcej`}
+                          </div>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {level.level}
+                        Poziom {level.level}
                       </span>
                     </div>
                   </div>
