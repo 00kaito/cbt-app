@@ -57,7 +57,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
       <div className="flex items-center justify-center h-64 text-muted-foreground">
         <div className="text-center">
           <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No mood data for this period</p>
+          <p className="text-sm">Brak danych o nastroju w tym okresie</p>
         </div>
       </div>
     );
@@ -67,11 +67,11 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
     <div className="w-full">
       <div className="mb-4">
         <p className="text-sm text-muted-foreground">
-          {chartData.length} mood entries in last {timeRange.toUpperCase()}
+          {chartData.length} wpisów nastroju w ostatnich {timeRange === '7d' ? '7 dniach' : timeRange === '30d' ? '30 dniach' : '90 dniach'}
         </p>
         {chartData.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Latest: Level {chartData[chartData.length - 1]?.moodLevel} on {chartData[chartData.length - 1]?.date}
+            Ostatni: Poziom {chartData[chartData.length - 1]?.moodLevel} w dniu {chartData[chartData.length - 1]?.date}
           </p>
         )}
       </div>

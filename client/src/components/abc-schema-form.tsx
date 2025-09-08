@@ -37,14 +37,14 @@ export default function ABCSchemaForm() {
     },
     onSuccess: () => {
       toast({
-        title: "Shared with therapist",
-        description: "Your ABC schema has been shared with your therapist.",
+        title: "Udostępniono terapeucie",
+        description: "Twój schemat ABC został udostępniony terapeucie.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Sharing failed",
-        description: error.message || "Failed to share with therapist. Please try again.",
+        title: "Udostępnianie nie powiodło się",
+        description: error.message || "Nie udało się udostępnić terapeucie. Spróbuj ponownie.",
         variant: "destructive",
       });
     },
@@ -63,8 +63,8 @@ export default function ABCSchemaForm() {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to save ABC schema. Please try again.",
+        title: "Błąd",
+        description: "Nie udało się zapisać schematu ABC. Spróbuj ponownie.",
         variant: "destructive",
       });
     },

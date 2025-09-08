@@ -18,7 +18,7 @@ export default function CompletedExercises() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            Completed Exercises
+            Ukończone ćwiczenia
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,10 +48,10 @@ export default function CompletedExercises() {
           <div className="text-center py-8">
             <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground" data-testid="text-no-completed-exercises">
-              No completed exercises yet
+              Brak ukończonych ćwiczeń
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Complete exercises from AI recommendations or your Exercise Library
+              Ukończ ćwiczenia z rekomendacji AI lub z biblioteki ćwiczeń
             </p>
           </div>
         ) : (
@@ -85,7 +85,7 @@ export default function CompletedExercises() {
 
                 {/* Exercise Instructions */}
                 <div className="bg-muted/50 rounded-md p-3">
-                  <p className="text-sm font-medium text-foreground mb-2">Exercise Instructions:</p>
+                  <p className="text-sm font-medium text-foreground mb-2">Instrukcje ćwiczenia:</p>
                   <p className="text-sm text-muted-foreground" data-testid="exercise-instructions">
                     {completion.exercise.instructions}
                   </p>
@@ -93,7 +93,7 @@ export default function CompletedExercises() {
 
                 {/* Patient Response */}
                 <div className="bg-accent/10 rounded-md p-3">
-                  <p className="text-sm font-medium text-foreground mb-2">Your Response:</p>
+                  <p className="text-sm font-medium text-foreground mb-2">Twoja odpowiedź:</p>
                   <p className="text-sm text-foreground" data-testid="patient-response">
                     {completion.response}
                   </p>

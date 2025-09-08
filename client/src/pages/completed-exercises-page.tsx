@@ -14,8 +14,8 @@ export default function CompletedExercisesPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <h1 className="text-xl font-semibold text-foreground mb-2">Access Denied</h1>
-            <p className="text-muted-foreground">Please log in to view your completed exercises.</p>
+            <h1 className="text-xl font-semibold text-foreground mb-2">Dostęp zabroniony</h1>
+            <p className="text-muted-foreground">Zaloguj się, aby zobaczyć swoje ukończone ćwiczenia.</p>
           </CardContent>
         </Card>
       </div>
@@ -33,15 +33,15 @@ export default function CompletedExercisesPage() {
             <Link href="/">
               <Button variant="ghost" size="sm" data-testid="button-back-to-dashboard">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                Powrót do panelu
               </Button>
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-foreground" data-testid="text-page-title">
-                Completed Exercises
+                Ukończone ćwiczenia
               </h1>
               <p className="text-muted-foreground">
-                Review your progress and insights from completed therapeutic exercises
+                Przeglądaj swój postęp i spostrzenie z ukończonych ćwiczeń terapeutycznych
               </p>
             </div>
           </div>

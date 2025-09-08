@@ -154,7 +154,7 @@ export default function ExerciseCompletionModal({
               className="flex-1"
               data-testid="button-save-exercise"
             >
-              {isLoading ? "Saving..." : "Save Exercise"}
+              {isLoading ? "Zapisywanie..." : "Zapisz ćwiczenie"}
             </Button>
           </div>
         </div>

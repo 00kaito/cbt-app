@@ -52,12 +52,12 @@ export default function AuthPage() {
               <h1 className="text-2xl font-bold text-foreground">MindBridge</h1>
             </div>
             <CardTitle data-testid="auth-title">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isLogin ? "Witaj ponownie" : "Utwórz konto"}
             </CardTitle>
             <CardDescription>
               {isLogin 
-                ? "Sign in to continue your mental health journey" 
-                : "Join our supportive community today"
+                ? "Zaloguj się, aby kontynuować swój proces terapeutyczny" 
+                : "Dołącz do naszej wspierającej społeczności"
               }
             </CardDescription>
           </CardHeader>
@@ -68,7 +68,7 @@ export default function AuthPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">Imię</Label>
                       <Input
                         id="firstName"
                         type="text"
@@ -79,7 +79,7 @@ export default function AuthPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">Nazwisko</Label>
                       <Input
                         id="lastName"
                         type="text"
@@ -104,7 +104,7 @@ export default function AuthPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="role">I am a...</Label>
+                    <Label htmlFor="role">Jestem...</Label>
                     <Select 
                       value={formData.role} 
                       onValueChange={(value: "patient" | "therapist") => handleInputChange("role", value)}
@@ -113,8 +113,8 @@ export default function AuthPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="patient">Patient</SelectItem>
-                        <SelectItem value="therapist">Therapist</SelectItem>
+                        <SelectItem value="patient">Pacjentem</SelectItem>
+                        <SelectItem value="therapist">Terapeutą</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -122,7 +122,7 @@ export default function AuthPage() {
               )}
 
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Nazwa użytkownika</Label>
                 <Input
                   id="username"
                   type="text"
@@ -134,7 +134,7 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Hasło</Label>
                 <Input
                   id="password"
                   type="password"
@@ -154,8 +154,8 @@ export default function AuthPage() {
                 data-testid={isLogin ? "button-login" : "button-register"}
               >
                 {loginMutation.isPending || registerMutation.isPending 
-                  ? "Please wait..." 
-                  : (isLogin ? "Sign In" : "Create Account")
+                  ? "Proszę czekać..." 
+                  : (isLogin ? "Zaloguj się" : "Utwórz konto")
                 }
               </Button>
 
@@ -167,8 +167,8 @@ export default function AuthPage() {
                   data-testid="button-toggle-auth"
                 >
                   {isLogin 
-                    ? "Don't have an account? Sign up" 
-                    : "Already have an account? Sign in"
+                    ? "Nie masz konta? Zarejestruj się" 
+                    : "Masz już konto? Zaloguj się"
                   }
                 </button>
               </div>
@@ -183,10 +183,10 @@ export default function AuthPage() {
           <div className="space-y-4">
             <Brain className="h-16 w-16 text-primary mx-auto" />
             <h2 className="text-3xl font-bold text-foreground">
-              Mental Health Made Simple
+              Zdrowie psychiczne uproszczone
             </h2>
             <p className="text-muted-foreground text-lg">
-              Track your mood, practice CBT techniques, and connect with therapists in one comprehensive platform.
+              Śledź swój nastrój, ćwicz techniki CBT i łącz się z terapeutami na jednej platformie.
             </p>
           </div>
 
@@ -194,8 +194,8 @@ export default function AuthPage() {
             <div className="flex items-center space-x-3 text-left">
               <Heart className="h-6 w-6 text-accent flex-shrink-0" />
               <div>
-                <h3 className="font-medium text-foreground">Mood Tracking</h3>
-                <p className="text-sm text-muted-foreground">Monitor your emotional wellbeing with customizable scales</p>
+                <h3 className="font-medium text-foreground">Śledzenie nastroju</h3>
+                <p className="text-sm text-muted-foreground">Monitoruj swoje samopoczucie z personalizowanymi skalami</p>
               </div>
             </div>
 
