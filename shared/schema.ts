@@ -104,6 +104,7 @@ export const therapistExercises = pgTable("therapist_exercises", {
   estimatedDuration: integer("estimated_duration"), // in minutes
   difficulty: text("difficulty").notNull(), // "easy", "medium", "hard"
   isActive: boolean("is_active").default(true),
+  abcSchemaId: varchar("abc_schema_id").references(() => abcSchemas.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

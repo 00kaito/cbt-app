@@ -4,9 +4,9 @@ import MoodChart from "@/components/mood-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp, CheckCircle, Clock, Eye, Activity } from "lucide-react";
+import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp, CheckCircle, Clock, Eye, Activity, Plus } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -17,14 +17,21 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import ExerciseCreationModal from "@/components/exercise-creation-modal";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PatientDetail() {
   const { user } = useAuth();
   const params = useParams();
   const [location] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedAbcSchema, setSelectedAbcSchema] = useState<any>(null);
   const [abcExercises, setAbcExercises] = useState<any[]>([]);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
+  const [exerciseCreationModalOpen, setExerciseCreationModalOpen] = useState(false);
+  const [selectedAbcForExercise, setSelectedAbcForExercise] = useState<any>(null);
   
   // Extract patient ID from URL path
   const patientId = params.id || location.split('/').pop();
@@ -67,6 +74,47 @@ export default function PatientDetail() {
       }
     } catch (error) {
       console.error("Failed to fetch related exercises:", error);
+    }
+  };
+
+  const handleCreateAbcExercise = (abcSchema: any) => {
+    setSelectedAbcForExercise(abcSchema);
+    setExerciseCreationModalOpen(true);
+  };
+
+  // Mutation for creating exercises
+  const createExerciseMutation = useMutation({
+    mutationFn: async (exerciseData: any) => {
+      const response = await apiRequest("POST", "/api/therapist/exercises", exerciseData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/therapist/patient", patientId, "exercise-completions"] 
+      });
+      setExerciseCreationModalOpen(false);
+      setSelectedAbcForExercise(null);
+      toast({
+        title: "Ćwiczenie utworzone",
+        description: "Ćwiczenie zostało pomyślnie utworzone dla tego zapisu ABC",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się utworzyć ćwiczenia",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleExerciseSubmit = (exerciseData: any) => {
+    if (selectedAbcForExercise && patient) {
+      createExerciseMutation.mutate({
+        ...exerciseData,
+        patientId: patient.id,
+        abcSchemaId: selectedAbcForExercise.id,
+      });
     }
   };
 
@@ -232,6 +280,14 @@ export default function PatientDetail() {
                         >
                           <Activity className="h-4 w-4 mr-2" />
                           Zobacz powiązane ćwiczenia
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => handleCreateAbcExercise(schema)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Utwórz ćwiczenie dla tego ABC
                         </Button>
                         <div className="text-sm text-muted-foreground">
                           {format(new Date(schema.createdAt), "dd.MM.yyyy", { locale: pl })}
@@ -474,6 +530,20 @@ export default function PatientDetail() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Exercise Creation Modal */}
+      <ExerciseCreationModal
+        isOpen={exerciseCreationModalOpen}
+        onClose={() => {
+          setExerciseCreationModalOpen(false);
+          setSelectedAbcForExercise(null);
+        }}
+        onSubmit={handleExerciseSubmit}
+        patients={patient ? [patient] : []}
+        selectedPatient={patient}
+        selectedAbcSchema={selectedAbcForExercise}
+        isLoading={createExerciseMutation.isPending}
+      />
       </main>
     </div>
   );

@@ -35,6 +35,8 @@ interface ExerciseCreationModalProps {
   onSubmit: (data: ExerciseFormData) => void;
   patients: User[];
   isLoading?: boolean;
+  selectedPatient?: User;
+  selectedAbcSchema?: any;
 }
 
 const categories = [
@@ -59,15 +61,17 @@ export default function ExerciseCreationModal({
   onSubmit,
   patients,
   isLoading = false,
+  selectedPatient,
+  selectedAbcSchema,
 }: ExerciseCreationModalProps) {
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(exerciseFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: selectedAbcSchema ? `Ćwiczenie dla ABC: ${selectedAbcSchema.activatingEvent.substring(0, 50)}...` : "",
+      description: selectedAbcSchema ? `Ćwiczenie związane z zapisem myślowym ABC utworzonym ${new Date(selectedAbcSchema.createdAt).toLocaleDateString('pl-PL')}` : "",
       instructions: "",
       category: "",
-      patientId: "",
+      patientId: selectedPatient?.id || "",
       estimatedDuration: 15,
       difficulty: "medium",
     },
