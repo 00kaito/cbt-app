@@ -77,6 +77,7 @@ export const exerciseCompletions = pgTable("exercise_completions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   exerciseId: varchar("exercise_id").notNull().references(() => exercises.id),
+  response: text("response"), // user's exercise response/completion text
   moodBefore: integer("mood_before"),
   moodAfter: integer("mood_after"),
   effectiveness: real("effectiveness"), // calculated improvement

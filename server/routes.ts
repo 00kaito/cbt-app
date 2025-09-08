@@ -330,6 +330,29 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get exercise completions for specific patient
+  app.get("/api/therapist/patient/:patientId/exercise-completions", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const patientId = req.params.patientId;
+      
+      // Verify this patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+      
+      const completions = await storage.getExerciseCompletions(patientId);
+      res.json(completions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exercise completions" });
+    }
+  });
+
   // Get shared data for specific patient
   app.get("/api/therapist/patient/:patientId/shared-data", async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== "therapist") {

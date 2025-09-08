@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp } from "lucide-react";
+import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp, CheckCircle, Clock } from "lucide-react";
 
 export default function PatientDetail() {
   const { user } = useAuth();
@@ -32,6 +32,12 @@ export default function PatientDetail() {
   // Fetch shared ABC schemas
   const { data: sharedData } = useQuery({
     queryKey: ["/api/therapist/patient", patientId, "shared-data"],
+    enabled: user?.role === "therapist" && !!patientId,
+  });
+
+  // Fetch patient's exercise completions
+  const { data: exerciseCompletions } = useQuery({
+    queryKey: ["/api/therapist/patient", patientId, "exercise-completions"],
     enabled: user?.role === "therapist" && !!patientId,
   });
   
@@ -237,6 +243,57 @@ export default function PatientDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Exercise Completions Section */}
+        {exerciseCompletions && exerciseCompletions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" data-testid="text-exercise-completions">
+                <CheckCircle className="h-5 w-5" />
+                <span>Exercise Completions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {exerciseCompletions.map((completion: any) => (
+                <div
+                  key={completion.id}
+                  className="border rounded-lg p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-foreground">
+                      Exercise Completion
+                    </h4>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(completion.completedAt).toLocaleDateString('pl-PL')}
+                      </div>
+                      {completion.moodBefore && completion.moodAfter && (
+                        <div className="text-xs">
+                          Mood: {completion.moodBefore} → {completion.moodAfter}
+                          {completion.moodAfter > completion.moodBefore && (
+                            <span className="text-green-600 ml-1">↗</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {completion.response && (
+                    <div className="bg-muted/30 p-3 rounded-md">
+                      <p className="text-sm text-foreground">
+                        {completion.response.length > 200 
+                          ? `${completion.response.substring(0, 200)}...` 
+                          : completion.response
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );

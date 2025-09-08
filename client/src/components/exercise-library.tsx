@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Clock, Play, BookOpen } from "lucide-react";
-import { Exercise } from "@shared/schema";
+import { Clock, Play, BookOpen, CheckCircle, Calendar } from "lucide-react";
+import { Exercise, ExerciseCompletion } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -17,6 +17,10 @@ export default function ExerciseLibrary() {
 
   const { data: exercises } = useQuery<Exercise[]>({
     queryKey: ["/api/exercises"],
+  });
+
+  const { data: completions } = useQuery<ExerciseCompletion[]>({
+    queryKey: ["/api/exercise-completions"],
   });
 
   const completeExerciseMutation = useMutation({
@@ -108,7 +112,70 @@ export default function ExerciseLibrary() {
     : displayExercises.filter(ex => ex.category === selectedCategory);
 
   return (
-    <section className="bg-card rounded-lg shadow-sm border border-border p-6">
+    <div className="space-y-8">
+      {/* Completed Exercises Section */}
+      {completions && completions.length > 0 && (
+        <section className="bg-card rounded-lg shadow-sm border border-border p-6">
+          <div className="mb-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <h2 className="text-xl font-semibold text-foreground" data-testid="text-completed-exercises">
+                Completed Exercises
+              </h2>
+            </div>
+            <p className="text-muted-foreground mt-2">
+              Review your progress and insights from completed exercises
+            </p>
+          </div>
+          
+          <div className="grid gap-4">
+            {completions.map((completion) => {
+              const exercise = displayExercises.find(ex => ex.id === completion.exerciseId);
+              if (!exercise) return null;
+              
+              return (
+                <Card key={completion.id} className="border-l-4 border-l-green-500">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium text-foreground">{exercise.title}</h3>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(completion.completedAt).toLocaleDateString('pl-PL')}
+                          </div>
+                          {completion.moodBefore && completion.moodAfter && (
+                            <div className="text-xs">
+                              Mood: {completion.moodBefore} → {completion.moodAfter}
+                              {completion.moodAfter > completion.moodBefore && (
+                                <span className="text-green-600 ml-1">↗</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {completion.response && (
+                        <div className="bg-muted/30 p-3 rounded-md">
+                          <p className="text-sm text-foreground">
+                            {completion.response.length > 150 
+                              ? `${completion.response.substring(0, 150)}...` 
+                              : completion.response
+                            }
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Available Exercises Section */}
+      <section className="bg-card rounded-lg shadow-sm border border-border p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground" data-testid="text-exercise-library-title">
           Exercise Library
@@ -215,6 +282,7 @@ export default function ExerciseLibrary() {
         onComplete={completeExerciseMutation.mutate}
         isLoading={completeExerciseMutation.isPending}
       />
-    </section>
+      </section>
+    </div>
   );
 }
