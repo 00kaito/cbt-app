@@ -21,7 +21,6 @@ export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchema
     consequences: editingSchema?.consequences || "",
     moodBefore: editingSchema?.moodBefore || 3,
   });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastCreatedSchemaId, setLastCreatedSchemaId] = useState<string | null>(null);
   
   // Clear analysis state on logout
@@ -100,8 +99,10 @@ export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchema
           description: "Zapis myślowy ABC został zaktualizowany.",
         });
       } else {
-        // Trigger analysis for new schemas
-        analyzeAbcSchema(schema.id);
+        toast({
+          title: "Zapisano",
+          description: "Zapis myślowy ABC został zapisany.",
+        });
       }
     },
     onError: () => {
@@ -113,38 +114,6 @@ export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchema
     },
   });
 
-  const analyzeAbcSchema = async (schemaId: string) => {
-    setIsAnalyzing(true);
-    try {
-      await apiRequest("POST", `/api/abc-schemas/${schemaId}/analyze`);
-      queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
-      toast({
-        title: "Analiza zakończona",
-        description: "Twoje wzorce myślowe zostały przeanalizowane.",
-      });
-    } catch (error) {
-      toast({
-        title: "Analiza nie powiodła się",
-        description: "Nie udało się przeanalizować wzorców myślowych. Spróbuj ponownie.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (!formData.activatingEvent || !formData.beliefs || !formData.consequences) {
-      toast({
-        title: "Brakuje informacji",
-        description: "Proszę wypełnić wszystkie trzy sekcje (A, B, C).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createAbcSchemaMutation.mutate(formData);
-  };
 
   const handleSaveDraft = () => {
     createAbcSchemaMutation.mutate(formData);
@@ -250,21 +219,13 @@ Zachowanie: Co robiłeś?"
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <Button 
-            onClick={handleSubmit}
-            disabled={createAbcSchemaMutation.isPending || isAnalyzing}
-            data-testid="button-analyze-abc"
-          >
-            <Search className="h-4 w-4 mr-2" />
-            {isAnalyzing ? "Analizowanie..." : (editingSchema ? "Analizuj ponownie" : "Analizuj myśli")}
-          </Button>
-          <Button 
             variant="outline"
             onClick={handleSaveDraft}
             disabled={createAbcSchemaMutation.isPending}
             data-testid="button-save-draft"
           >
             <Save className="h-4 w-4 mr-2" />
-            {editingSchema ? "Zaktualizuj" : "Zapisz szkic"}
+            {editingSchema ? "Zaktualizuj" : "Zapisz"}
           </Button>
           {editingSchema && (
             <Button 

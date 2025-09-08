@@ -45,6 +45,8 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
   const [analyzingSchemas, setAnalyzingSchemas] = useState<Set<string>>(new Set());
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const { data: abcSchemas, isLoading } = useQuery<AbcSchema[]>({
     queryKey: ["/api/abc-schemas"],
@@ -218,11 +220,25 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
     );
   }
 
+  // Calculate pagination
+  const totalItems = abcSchemas?.length || 0;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedSchemas = abcSchemas?.slice(startIndex, endIndex) || [];
+
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle data-testid="text-my-abc-schemas">Moje myślowe ABC</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle data-testid="text-my-abc-schemas">Moje myślowe ABC</CardTitle>
+            {totalItems > 0 && (
+              <div className="text-sm text-muted-foreground">
+                {startIndex + 1}-{Math.min(endIndex, totalItems)} z {totalItems}
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {!abcSchemas?.length ? (
@@ -237,7 +253,7 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {abcSchemas.map((schema) => (
+              {paginatedSchemas.map((schema) => (
                 <div
                   key={schema.id}
                   className="border rounded-lg p-4 hover:bg-muted/10 transition-colors"
@@ -358,6 +374,31 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Poprzednia
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Strona {currentPage} z {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Następna
+              </Button>
             </div>
           )}
         </CardContent>

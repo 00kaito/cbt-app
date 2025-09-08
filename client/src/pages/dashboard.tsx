@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/use-auth";
 import Navigation from "@/components/navigation";
 import MoodScale from "@/components/mood-scale";
 import ABCSchemaForm from "@/components/abc-schema-form";
-import AIAnalysis from "@/components/ai-analysis";
 import MoodChart from "@/components/mood-chart";
 import ExerciseLibrary from "@/components/exercise-library";
 import MyAbcSchemas from "@/components/my-abc-schemas";
@@ -115,9 +114,6 @@ export default function Dashboard() {
         <MyAbcSchemas 
           onEditSchema={(schema) => setEditingSchema(schema)}
         />
-
-        {/* AI Analysis */}
-        <AIAnalysis />
 
         {/* Exercise Library */}
         <ExerciseLibrary />
