@@ -11,7 +11,8 @@ import {
   Calendar,
   AlertTriangle,
   MoreVertical,
-  Eye
+  Eye,
+  ArrowRight
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,11 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AbcSchema } from "@shared/schema";
+import { AbcSchema, Exercise } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import ExerciseCompletionModal from "./exercise-completion-modal";
 
 interface MyAbcSchemasProps {
   onEditSchema?: (schema: AbcSchema) => void;
@@ -40,9 +42,16 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
   const { toast } = useToast();
   const [selectedSchema, setSelectedSchema] = useState<AbcSchema | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [analyzingSchemas, setAnalyzingSchemas] = useState<Set<string>>(new Set());
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
 
   const { data: abcSchemas, isLoading } = useQuery<AbcSchema[]>({
     queryKey: ["/api/abc-schemas"],
+  });
+
+  const { data: exercises } = useQuery<Exercise[]>({
+    queryKey: ["/api/exercises"],
   });
 
   const deleteAbcSchemaMutation = useMutation({
@@ -89,14 +98,24 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
     mutationFn: async (schemaId: string) => {
       await apiRequest("POST", `/api/abc-schemas/${schemaId}/analyze`);
     },
-    onSuccess: () => {
+    onSuccess: (_, schemaId) => {
       queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
+      setAnalyzingSchemas(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(schemaId);
+        return newSet;
+      });
       toast({
         title: "Analiza zakończona",
         description: "Twoje wzorce myślowe zostały przeanalizowane.",
       });
     },
-    onError: () => {
+    onError: (_, schemaId) => {
+      setAnalyzingSchemas(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(schemaId);
+        return newSet;
+      });
       toast({
         title: "Analiza nie powiodła się",
         description: "Nie udało się przeanalizować wzorców myślowych.",
@@ -127,8 +146,45 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
   };
 
   const handleAnalyze = (schemaId: string) => {
+    setAnalyzingSchemas(prev => new Set(prev.add(schemaId)));
     analyzeAbcSchemaMutation.mutate(schemaId);
   };
+
+  const handleStartExercise = (exerciseId: string) => {
+    const exercise = exercises?.find(ex => ex.id === exerciseId);
+    if (exercise) {
+      setSelectedExercise(exercise);
+      setExerciseModalOpen(true);
+    }
+  };
+
+  const completeExerciseMutation = useMutation({
+    mutationFn: async (data: {
+      exerciseId: string;
+      response: string;
+      moodBefore: number;
+      moodAfter: number;
+    }) => {
+      const res = await apiRequest("POST", "/api/exercise-completions", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exercise-completions"] });
+      setExerciseModalOpen(false);
+      setSelectedExercise(null);
+      toast({
+        title: "Ćwiczenie ukończone!",
+        description: "Twój postęp został zapisany.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zapisać ukończenia ćwiczenia.",
+        variant: "destructive",
+      });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -218,9 +274,12 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                             <Edit className="h-4 w-4 mr-2" />
                             Edytuj
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAnalyze(schema.id)}>
+                          <DropdownMenuItem 
+                            onClick={() => handleAnalyze(schema.id)}
+                            disabled={analyzingSchemas.has(schema.id)}
+                          >
                             <Bot className="h-4 w-4 mr-2" />
-                            Analizuj AI
+                            {analyzingSchemas.has(schema.id) ? "Analizowanie..." : "Analizuj AI"}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleShare(schema.id)}>
                             <Share className="h-4 w-4 mr-2" />
@@ -371,10 +430,22 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                       <div className="space-y-2">
                         {selectedSchema.analysisResults.recommendations.map((rec, index) => (
                           <div key={index} className="bg-accent/10 border border-accent/20 rounded p-3">
-                            <span className="font-medium text-foreground capitalize">
-                              {rec.exerciseId.replace('-', ' ')}
-                            </span>
-                            <p className="text-sm text-muted-foreground mt-1">{rec.reason}</p>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <span className="font-medium text-foreground capitalize">
+                                  {rec.exerciseId.replace('-', ' ')}
+                                </span>
+                                <p className="text-sm text-muted-foreground mt-1">{rec.reason}</p>
+                              </div>
+                              <Button 
+                                size="sm"
+                                className="bg-accent hover:bg-accent/90 text-accent-foreground ml-3"
+                                onClick={() => handleStartExercise(rec.exerciseId)}
+                                data-testid={`button-start-exercise-${index}`}
+                              >
+                                Rozpocznij
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -382,10 +453,37 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                   )}
                 </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                {selectedSchema && !selectedSchema.sharedWithTherapist && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleShare(selectedSchema.id)}
+                    disabled={shareWithTherapistMutation.isPending}
+                    data-testid="button-share-from-modal"
+                  >
+                    <Share className="h-4 w-4 mr-2" />
+                    {shareWithTherapistMutation.isPending ? "Udostępnianie..." : "Udostępnij terapeucie"}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Exercise Completion Modal */}
+      <ExerciseCompletionModal
+        exercise={selectedExercise}
+        isOpen={exerciseModalOpen}
+        onClose={() => {
+          setExerciseModalOpen(false);
+          setSelectedExercise(null);
+        }}
+        onComplete={completeExerciseMutation.mutate}
+        isLoading={completeExerciseMutation.isPending}
+      />
     </>
   );
 }

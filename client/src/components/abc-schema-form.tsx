@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,26 @@ export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchema
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastCreatedSchemaId, setLastCreatedSchemaId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Update form data when editing schema changes
+  useEffect(() => {
+    if (editingSchema) {
+      setFormData({
+        activatingEvent: editingSchema.activatingEvent,
+        beliefs: editingSchema.beliefs,
+        consequences: editingSchema.consequences,
+        moodBefore: editingSchema.moodBefore || 3,
+      });
+    } else {
+      // Reset form when not editing
+      setFormData({
+        activatingEvent: "",
+        beliefs: "",
+        consequences: "",
+        moodBefore: 3,
+      });
+    }
+  }, [editingSchema]);
 
   // Get assigned therapists
   const { data: assignedTherapists } = useQuery({
