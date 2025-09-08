@@ -5,15 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp } from "lucide-react";
 
 export default function PatientDetail() {
   const { user } = useAuth();
   const params = useParams();
-  const patientId = params.id;
+  const [location] = useLocation();
   
-  console.log("PatientDetail - params:", params, "patientId:", patientId);
+  // Extract patient ID from URL path
+  const patientId = params.id || location.split('/').pop();
+  
+  console.log("PatientDetail - location:", location, "params:", params, "patientId:", patientId);
 
   // Fetch patient details
   const { data: patient, isLoading: patientLoading } = useQuery({

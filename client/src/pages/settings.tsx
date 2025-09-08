@@ -16,8 +16,9 @@ export default function Settings() {
   const [therapistEmail, setTherapistEmail] = useState("");
 
   // Get current therapist assignments
-  const { data: assignedTherapists } = useQuery({
+  const { data: assignedTherapists, refetch: refetchTherapists } = useQuery({
     queryKey: ["/api/patient/therapists"],
+    enabled: user?.role === "patient",
   });
 
   // Assign therapist mutation
@@ -28,6 +29,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/patient/therapists"] });
+      refetchTherapists();
       setTherapistEmail("");
       toast({
         title: "Therapist assigned",
