@@ -5,6 +5,16 @@ import { TrendingUp } from "lucide-react";
 import { MoodEntry } from "@shared/schema";
 import { useState, useMemo } from "react";
 
+// Function to get color based on mood level
+const getMoodColor = (level: number) => {
+  if (level <= 2) return "#dc2626"; // red-600 - depression
+  if (level <= 3) return "#ea580c"; // orange-600 - low mood  
+  if (level === 4) return "#65a30d"; // lime-600 - normal/balanced
+  if (level === 5) return "#0891b2"; // cyan-600 - elevation
+  if (level === 6) return "#7c3aed"; // violet-600 - hypomania
+  return "#be185d"; // pink-600 - mania
+};
+
 // Simple line chart component for mood visualization  
 const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: string }) => {
   const chartData = useMemo(() => {
@@ -74,7 +84,7 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
       </div>
 
       {/* SVG Chart */}
-      <div className="relative h-80 w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6">
+      <div className="relative h-80 w-full bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-4 overflow-hidden">
         <svg 
           viewBox={`0 0 ${width} ${height}`} 
           className="w-full h-full"
@@ -106,13 +116,16 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
           {/* Data points */}
           {chartData.map((point, index) => {
             const isLast = index === chartData.length - 1;
+            const color = getMoodColor(point.level);
             return (
               <circle
                 key={index}
                 cx={scaleX(point.x)}
                 cy={scaleY(point.y)}
                 r={isLast ? "2.5" : "1.5"}
-                fill={isLast ? "hsl(var(--primary))" : "hsl(var(--primary))"}
+                fill={color}
+                stroke={isLast ? "#ffffff" : "transparent"}
+                strokeWidth={isLast ? "1" : "0"}
                 className={isLast ? "drop-shadow-md" : ""}
                 data-testid={`mood-point-${index}`}
               >
@@ -123,16 +136,16 @@ const MoodLineChart = ({ entries, timeRange }: { entries: any[], timeRange: stri
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-6 text-sm text-muted-foreground">
+        <div className="absolute left-1 top-6 bottom-6 flex flex-col justify-between text-sm text-muted-foreground">
           {[7, 6, 5, 4, 3, 2, 1].map(level => (
-            <div key={level} className="flex items-center">
-              <span className="w-4 text-right font-medium">{level}</span>
+            <div key={level} className="flex items-center h-0">
+              <span className="w-3 text-right font-medium text-xs">{level}</span>
             </div>
           ))}
         </div>
 
         {/* X-axis labels */}
-        <div className="absolute bottom-0 left-6 right-6 flex justify-between text-xs text-muted-foreground py-2">
+        <div className="absolute bottom-1 left-8 right-8 flex justify-between text-xs text-muted-foreground">
           {chartData.length > 1 && chartData.map((point, index) => {
             // Show only first, last, and some middle points to avoid crowding
             const showLabel = index === 0 || 
