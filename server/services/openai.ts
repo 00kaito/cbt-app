@@ -91,7 +91,6 @@ export async function analyzeABCSchema(
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.3,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -130,7 +129,6 @@ export async function generateExerciseContent(
           content: prompt
         }
       ],
-      temperature: 0.7,
     });
 
     return response.choices[0].message.content || "";
