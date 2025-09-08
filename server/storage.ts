@@ -702,6 +702,11 @@ export class DatabaseStorage implements IStorage {
     return completionsWithExercise.filter(Boolean) as (ExerciseCompletion & { exercise: Exercise | TherapistExercise })[];
   }
 
+  private getLevelName(levels: any[], levelValue: number): string {
+    const level = levels.find(l => l.level === levelValue);
+    return level ? level.title : `Poziom ${levelValue}`;
+  }
+
   async updateTherapistPatientVisit(therapistId: string, patientId: string): Promise<void> {
     // Try to find existing visit record
     const [existingVisit] = await db
@@ -734,13 +739,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPatientSummaryForTherapist(patientId: string, therapistId: string): Promise<{
-    latestMood: { value: number; date: Date } | null;
+    latestMood: { value: number; date: Date; levelName: string; maxValue: number } | null;
     newItemsSinceLastVisit: number;
   }> {
-    // Get latest mood entry
+    // Get latest mood entry with mood scale
     const [latestMoodEntry] = await db
-      .select()
+      .select({
+        moodEntry: moodEntries,
+        moodScale: moodScales
+      })
       .from(moodEntries)
+      .innerJoin(moodScales, eq(moodEntries.moodScaleId, moodScales.id))
       .where(eq(moodEntries.userId, patientId))
       .orderBy(desc(moodEntries.createdAt))
       .limit(1);
@@ -783,8 +792,10 @@ export class DatabaseStorage implements IStorage {
 
     return {
       latestMood: latestMoodEntry ? {
-        value: latestMoodEntry.moodLevel,
-        date: latestMoodEntry.createdAt
+        value: latestMoodEntry.moodEntry.moodLevel,
+        date: latestMoodEntry.moodEntry.createdAt,
+        levelName: this.getLevelName(latestMoodEntry.moodScale.levels, latestMoodEntry.moodEntry.moodLevel),
+        maxValue: latestMoodEntry.moodScale.levels.length
       } : null,
       newItemsSinceLastVisit: newItemsCount
     };
