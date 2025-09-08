@@ -209,14 +209,25 @@ export function registerRoutes(app: Express): Server {
       });
       console.log("Validated data:", validatedData);
 
-      // Calculate effectiveness if both before and after moods are provided
-      if (validatedData.moodBefore && validatedData.moodAfter) {
-        const improvement = validatedData.moodAfter - validatedData.moodBefore;
-        validatedData.effectiveness = Math.max(0, improvement / 7); // Normalize to 0-1 scale
-      }
+      // Check if this is a therapist exercise or regular exercise
+      const isTherapistExercise = await storage.isTherapistExercise(validatedData.exerciseId);
+      console.log("Is therapist exercise:", isTherapistExercise);
 
-      const completion = await storage.createExerciseCompletion(validatedData);
-      res.status(201).json(completion);
+      if (isTherapistExercise) {
+        // For therapist exercises, we need to handle completion differently
+        const completion = await storage.createTherapistExerciseCompletion(validatedData);
+        res.status(201).json(completion);
+      } else {
+        // Regular exercise completion
+        // Calculate effectiveness if both before and after moods are provided
+        if (validatedData.moodBefore && validatedData.moodAfter) {
+          const improvement = validatedData.moodAfter - validatedData.moodBefore;
+          validatedData.effectiveness = Math.max(0, improvement / 7); // Normalize to 0-1 scale
+        }
+
+        const completion = await storage.createExerciseCompletion(validatedData);
+        res.status(201).json(completion);
+      }
     } catch (error) {
       console.error("Exercise completion error:", error);
       if (error instanceof Error) {

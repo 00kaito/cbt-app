@@ -78,6 +78,8 @@ export interface IStorage {
   createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise>;
   updateTherapistExercise(id: string, exercise: Partial<InsertTherapistExercise>): Promise<TherapistExercise>;
   deleteTherapistExercise(id: string): Promise<void>;
+  isTherapistExercise(exerciseId: string): Promise<boolean>;
+  createTherapistExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion>;
 
   // Shared data methods
   getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{
@@ -484,6 +486,40 @@ export class DatabaseStorage implements IStorage {
       .update(therapistExercises)
       .set({ isActive: false })
       .where(eq(therapistExercises.id, id));
+  }
+
+  async isTherapistExercise(exerciseId: string): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(therapistExercises)
+      .where(eq(therapistExercises.id, exerciseId))
+      .limit(1);
+    return !!result;
+  }
+
+  async createTherapistExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion> {
+    // Calculate effectiveness if both before and after moods are provided
+    if (completion.moodBefore && completion.moodAfter) {
+      const improvement = completion.moodAfter - completion.moodBefore;
+      completion.effectiveness = Math.max(0, improvement / 7); // Normalize to 0-1 scale
+    }
+
+    // Create a pseudo exercise completion record that matches the expected structure
+    // but references the therapist exercise ID
+    const [created] = await db
+      .insert(exerciseCompletions)
+      .values({
+        userId: completion.userId,
+        exerciseId: completion.exerciseId, // This will be the therapist exercise ID
+        response: completion.response,
+        moodBefore: completion.moodBefore,
+        moodAfter: completion.moodAfter,
+        effectiveness: completion.effectiveness,
+        notes: completion.notes,
+      })
+      .returning();
+    
+    return created;
   }
 
   async getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{

@@ -76,7 +76,7 @@ export const exercises = pgTable("exercises", {
 export const exerciseCompletions = pgTable("exercise_completions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  exerciseId: varchar("exercise_id").notNull().references(() => exercises.id),
+  exerciseId: varchar("exercise_id").notNull(),
   response: text("response"), // user's exercise response/completion text
   moodBefore: integer("mood_before"),
   moodAfter: integer("mood_after"),
@@ -159,10 +159,6 @@ export const exerciseCompletionsRelations = relations(exerciseCompletions, ({ on
   user: one(users, {
     fields: [exerciseCompletions.userId],
     references: [users.id],
-  }),
-  exercise: one(exercises, {
-    fields: [exerciseCompletions.exerciseId],
-    references: [exercises.id],
   }),
 }));
 
