@@ -20,9 +20,9 @@ export default function MoodChart() {
     const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
     
     return moodEntries.filter(entry => {
-      if (!entry.recordedAt) return false;
+      if (!entry.createdAt) return false;
       try {
-        return new Date(entry.recordedAt) >= cutoffDate;
+        return new Date(entry.createdAt) >= cutoffDate;
       } catch (error) {
         console.error('Invalid date in mood entry:', entry);
         return false;
