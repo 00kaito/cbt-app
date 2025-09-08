@@ -16,8 +16,6 @@ export default function PatientDetail() {
   // Extract patient ID from URL path
   const patientId = params.id || location.split('/').pop();
   
-  console.log("PatientDetail - location:", location, "params:", params, "patientId:", patientId);
-
   // Fetch patient details
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/therapist/patient", patientId],
@@ -36,7 +34,6 @@ export default function PatientDetail() {
     enabled: user?.role === "therapist" && !!patientId,
   });
   
-  console.log("Shared data received:", sharedData);
   const sharedSchemas = sharedData?.abcSchemas || [];
 
   if (user?.role !== "therapist") {

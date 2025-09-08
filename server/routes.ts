@@ -294,23 +294,15 @@ export function registerRoutes(app: Express): Server {
     }
     try {
       const patientId = req.params.patientId;
-      console.log("Looking for patient:", patientId, "for therapist:", req.user!.id);
-      
       // Verify this patient is assigned to this therapist
       const patients = await storage.getTherapistPatients(req.user!.id);
-      console.log("Found patients:", patients.map(p => ({ id: p.id, name: p.firstName + " " + p.lastName })));
-      
       const patient = patients.find(p => p.id === patientId);
       
       if (!patient) {
-        console.log("Patient not found in therapist's list");
         return res.status(404).json({ message: "Patient not found or not assigned to you" });
       }
-      
-      console.log("Found patient:", patient.firstName, patient.lastName);
       res.json(patient);
     } catch (error) {
-      console.error("Error fetching patient details:", error);
       res.status(500).json({ message: "Failed to fetch patient details" });
     }
   });
@@ -355,7 +347,6 @@ export function registerRoutes(app: Express): Server {
       }
       
       const sharedData = await storage.getSharedDataForTherapist(req.user!.id, patientId);
-      console.log("Shared data for therapist:", req.user!.id, "patient:", patientId, "data:", JSON.stringify(sharedData, null, 2));
       res.json(sharedData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shared data" });
