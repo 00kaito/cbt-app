@@ -93,26 +93,6 @@ export default function MoodScale() {
     },
   });
 
-  const updateMoodEntryMutation = useMutation({
-    mutationFn: async ({ id, moodData }: { id: string; moodData: { moodLevel: number; notes?: string; moodScaleId?: string } }) => {
-      const res = await apiRequest("PATCH", `/api/mood-entries/${id}`, moodData);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mood-entries"] });
-      toast({
-        title: "Mood updated",
-        description: "Your mood has been successfully updated.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update mood. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const currentScale = moodScales?.[0] || { levels: defaultMoodLevels };
   const averageMood = recentMoods?.reduce((sum: number, entry: any) => sum + entry.moodLevel, 0) / (recentMoods?.length || 1) || 4;
@@ -126,34 +106,11 @@ export default function MoodScale() {
       setShowABCSuggestion(true);
     }
 
-    // Check if there's already a mood entry for today
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    const todayEntry = recentMoods?.find((entry: any) => {
-      if (!entry.createdAt) return false;
-      try {
-        const entryDate = new Date(entry.createdAt).toISOString().split('T')[0];
-        return entryDate === today;
-      } catch (error) {
-        console.error('Invalid date format for entry:', entry);
-        return false;
-      }
-    });
-
-    const moodData = {
+    // Always create new mood entry
+    createMoodEntryMutation.mutate({
       moodLevel: level,
       moodScaleId: moodScales?.[0]?.id,
-    };
-
-    if (todayEntry) {
-      // Update existing entry
-      updateMoodEntryMutation.mutate({
-        id: todayEntry.id,
-        moodData,
-      });
-    } else {
-      // Create new entry
-      createMoodEntryMutation.mutate(moodData);
-    }
+    });
   };
 
   return (
