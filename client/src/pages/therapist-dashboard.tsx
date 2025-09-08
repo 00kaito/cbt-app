@@ -54,8 +54,8 @@ export default function TherapistDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
-            <h1 className="text-xl font-semibold text-foreground mb-2">Access Denied</h1>
-            <p className="text-muted-foreground">This dashboard is only available to therapists.</p>
+            <h1 className="text-xl font-semibold text-foreground mb-2">Dostęp zabroniony</h1>
+            <p className="text-muted-foreground">Ten panel jest dostępny tylko dla terapeutów.</p>
           </CardContent>
         </Card>
       </div>
@@ -72,26 +72,26 @@ export default function TherapistDashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-foreground" data-testid="text-dashboard-title">
-                Therapist Dashboard
+                Panel terapeuty
               </h1>
               <p className="text-muted-foreground">
-                Monitor patient progress and manage your practice
+                Monitoruj postępy pacjentów i zarządzaj praktyką
               </p>
             </div>
             <div className="flex items-center space-x-2">
               <Select>
                 <SelectTrigger className="w-40" data-testid="select-filter">
-                  <SelectValue placeholder="All Patients" />
+                  <SelectValue placeholder="Wszyscy pacjenci" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Patients</SelectItem>
-                  <SelectItem value="high-priority">High Priority</SelectItem>
-                  <SelectItem value="recent-activity">Recent Activity</SelectItem>
+                  <SelectItem value="all">Wszyscy pacjenci</SelectItem>
+                  <SelectItem value="high-priority">Wysoki priorytet</SelectItem>
+                  <SelectItem value="recent-activity">Ostatnia aktywność</SelectItem>
                 </SelectContent>
               </Select>
               <Button data-testid="button-add-patient">
                 <UserPlus className="h-4 w-4 mr-2" />
-                Add Patient
+                Dodaj pacjenta
               </Button>
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function TherapistDashboard() {
             <div className="bg-muted/20 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <Users className="h-5 w-5 text-primary" />
-                <h3 className="font-medium text-foreground">Total Patients</h3>
+                <h3 className="font-medium text-foreground">Wszyscy pacjenci</h3>
               </div>
               <p className="text-2xl font-bold text-foreground mt-2" data-testid="stat-total-patients">
                 {patients?.length || 0}
@@ -110,7 +110,7 @@ export default function TherapistDashboard() {
             <div className="bg-muted/20 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <TrendingUp className="h-5 w-5 text-accent" />
-                <h3 className="font-medium text-foreground">Active Today</h3>
+                <h3 className="font-medium text-foreground">Aktywni dzisiaj</h3>
               </div>
               <p className="text-2xl font-bold text-foreground mt-2" data-testid="stat-active-today">
                 0
@@ -119,7 +119,7 @@ export default function TherapistDashboard() {
             <div className="bg-muted/20 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <Calendar className="h-5 w-5 text-secondary" />
-                <h3 className="font-medium text-foreground">Sessions Today</h3>
+                <h3 className="font-medium text-foreground">Sesje dzisiaj</h3>
               </div>
               <p className="text-2xl font-bold text-foreground mt-2" data-testid="stat-sessions-today">
                 0

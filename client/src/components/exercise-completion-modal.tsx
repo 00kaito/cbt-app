@@ -80,7 +80,7 @@ export default function ExerciseCompletionModal({
             <div className="space-y-2">
               <p className="text-foreground">{exercise.description}</p>
               <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm font-medium mb-2">Instructions:</p>
+                <p className="text-sm font-medium mb-2">Instrukcje:</p>
                 <p className="text-sm">{exercise.instructions}</p>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function ExerciseCompletionModal({
           {/* Mood Before */}
           <div className="space-y-2">
             <Label htmlFor="mood-before">
-              How do you feel before starting? (1-7)
+              Jak się czujesz przed rozpoczęciem? (1-7)
             </Label>
             <Input
               id="mood-before"
@@ -103,18 +103,18 @@ export default function ExerciseCompletionModal({
               data-testid="input-mood-before"
             />
             <p className="text-xs text-muted-foreground">
-              1 = Very bad, 4 = Neutral, 7 = Excellent
+              1 = Bardzo źle, 4 = Neutralnie, 7 = Doskonale
             </p>
           </div>
 
           {/* Exercise Response */}
           <div className="space-y-2">
             <Label htmlFor="exercise-response">
-              Complete the exercise
+              Ukończ ćwiczenie
             </Label>
             <Textarea
               id="exercise-response"
-              placeholder="Write your thoughts, reflections, or responses to this exercise..."
+              placeholder="Napisz swoje myśli, refleksje lub odpowiedzi na to ćwiczenie..."
               value={response}
               onChange={(e) => setResponse(e.target.value)}
               className="min-h-32"
@@ -125,7 +125,7 @@ export default function ExerciseCompletionModal({
           {/* Mood After */}
           <div className="space-y-2">
             <Label htmlFor="mood-after">
-              How do you feel after completing this exercise? (1-7)
+              Jak się czujesz po ukończeniu tego ćwiczenia? (1-7)
             </Label>
             <Input
               id="mood-after"
@@ -146,7 +146,7 @@ export default function ExerciseCompletionModal({
               disabled={isLoading}
               data-testid="button-cancel-exercise"
             >
-              Cancel
+              Anuluj
             </Button>
             <Button
               onClick={handleSubmit}

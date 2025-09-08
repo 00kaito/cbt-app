@@ -44,14 +44,14 @@ export default function ExerciseLibrary() {
       setModalOpen(false);
       setSelectedExercise(null);
       toast({
-        title: "Exercise completed!",
-        description: "Your progress has been saved.",
+        title: "Ćwiczenie ukończone!",
+        description: "Twój postęp został zapisany.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to save exercise completion.",
+        title: "Błąd",
+        description: "Nie udało się zapisać ukończenia ćwiczenia.",
         variant: "destructive",
       });
     },
@@ -77,7 +77,7 @@ export default function ExerciseLibrary() {
       <section className="bg-card rounded-lg shadow-sm border border-border p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground" data-testid="text-exercise-library-title">
-          Exercise Library
+          Biblioteka ćwiczeń
         </h2>
         <div className="flex space-x-2">
           <Button
@@ -86,7 +86,7 @@ export default function ExerciseLibrary() {
             onClick={() => setSelectedCategory("all")}
             data-testid="filter-all"
           >
-            All
+            Wszystkie
           </Button>
           {categories.map((category) => (
             <Button
@@ -106,10 +106,10 @@ export default function ExerciseLibrary() {
         <div className="text-center py-12">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2" data-testid="text-no-exercises">
-            No exercises available
+            Brak dostępnych ćwiczeń
           </h3>
           <p className="text-muted-foreground">
-            Exercise library is being populated. Check back soon!
+            Biblioteka ćwiczeń jest uzupełniana. Sprawdź ponownie wkrótce!
           </p>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export default function ExerciseLibrary() {
                 <p className="text-sm text-muted-foreground">{exercise.description}</p>
                 {exercise.instructions && (
                   <div className="mt-3 p-3 bg-muted/30 rounded-md">
-                    <h4 className="text-sm font-medium text-foreground mb-2">Instructions:</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-2">Instrukcje:</h4>
                     <p className="text-sm text-foreground leading-relaxed">{exercise.instructions}</p>
                   </div>
                 )}
@@ -140,18 +140,18 @@ export default function ExerciseLibrary() {
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {exercise.estimatedDuration} minutes
+                      {exercise.estimatedDuration} minut
                     </span>
                   </div>
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground">Category:</span>
+                    <span className="text-xs font-medium text-muted-foreground">Kategoria:</span>
                     <Badge variant="secondary" className="ml-2 text-xs">
                       {exercise.category}
                     </Badge>
                   </div>
                   {exercise.targetDistortions && exercise.targetDistortions.length > 0 && (
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground">Targets:</span>
+                      <span className="text-xs font-medium text-muted-foreground">Cele:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {exercise.targetDistortions.slice(0, 2).map((distortion) => (
                           <Badge key={distortion} variant="outline" className="text-xs">
@@ -169,7 +169,7 @@ export default function ExerciseLibrary() {
                   data-testid={`button-start-${exercise.id}`}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Start Exercise
+                  Rozpocznij ćwiczenie
                 </Button>
               </CardContent>
             </Card>
