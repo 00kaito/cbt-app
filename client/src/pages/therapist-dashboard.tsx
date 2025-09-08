@@ -235,16 +235,19 @@ export default function TherapistDashboard() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Obecny nastrój:</span>
-                        <span className="text-foreground flex items-center">
+                        <div className="text-foreground flex items-center">
                           {patient.latestMood ? (
                             <>
                               <span 
-                                className={`w-2 h-2 rounded-full mr-1 ${
-                                  patient.latestMood.value >= 7 ? 'bg-green-500' :
-                                  patient.latestMood.value >= 4 ? 'bg-yellow-500' : 'bg-red-500'
+                                className={`w-2 h-2 rounded-full mr-2 ${
+                                  patient.latestMood.value >= (patient.latestMood.maxValue * 0.7) ? 'bg-green-500' :
+                                  patient.latestMood.value >= (patient.latestMood.maxValue * 0.4) ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
                               ></span>
-                              {patient.latestMood.value}/10
+                              <div className="flex flex-col text-right">
+                                <span className="font-medium">{patient.latestMood.value}/{patient.latestMood.maxValue}</span>
+                                <span className="text-xs text-muted-foreground">{patient.latestMood.levelName}</span>
+                              </div>
                             </>
                           ) : (
                             <>
@@ -252,7 +255,7 @@ export default function TherapistDashboard() {
                               Nie śledzony
                             </>
                           )}
-                        </span>
+                        </div>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Udostępnione elementy:</span>
