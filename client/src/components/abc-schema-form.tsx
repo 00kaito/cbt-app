@@ -7,13 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Save, Share } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AbcSchema } from "@shared/schema";
 
-export default function ABCSchemaForm() {
+interface ABCSchemaFormProps {
+  editingSchema?: AbcSchema | null;
+  onCancelEdit?: () => void;
+}
+
+export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchemaFormProps = {}) {
   const [formData, setFormData] = useState({
-    activatingEvent: "",
-    beliefs: "",
-    consequences: "",
-    moodBefore: 3,
+    activatingEvent: editingSchema?.activatingEvent || "",
+    beliefs: editingSchema?.beliefs || "",
+    consequences: editingSchema?.consequences || "",
+    moodBefore: editingSchema?.moodBefore || 3,
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastCreatedSchemaId, setLastCreatedSchemaId] = useState<string | null>(null);
@@ -52,19 +58,29 @@ export default function ABCSchemaForm() {
 
   const createAbcSchemaMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const res = await apiRequest("POST", "/api/abc-schemas", data);
+      const endpoint = editingSchema ? `/api/abc-schemas/${editingSchema.id}` : "/api/abc-schemas";
+      const method = editingSchema ? "PATCH" : "POST";
+      const res = await apiRequest(method, endpoint, data);
       return res.json();
     },
     onSuccess: (schema) => {
       setLastCreatedSchemaId(schema.id);
       queryClient.invalidateQueries({ queryKey: ["/api/abc-schemas"] });
-      // Trigger analysis
-      analyzeAbcSchema(schema.id);
+      if (editingSchema && onCancelEdit) {
+        onCancelEdit();
+        toast({
+          title: "Zaktualizowano",
+          description: "Zapis myślowy ABC został zaktualizowany.",
+        });
+      } else {
+        // Trigger analysis for new schemas
+        analyzeAbcSchema(schema.id);
+      }
     },
     onError: () => {
       toast({
         title: "Błąd",
-        description: "Nie udało się zapisać schematu ABC. Spróbuj ponownie.",
+        description: editingSchema ? "Nie udało się zaktualizować schematu ABC." : "Nie udało się zapisać schematu ABC. Spróbuj ponownie.",
         variant: "destructive",
       });
     },
@@ -136,7 +152,7 @@ export default function ABCSchemaForm() {
     >
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground" data-testid="text-abc-title">
-          Zapis myślowy ABC
+          {editingSchema ? "Edytuj zapis myślowy ABC" : "Zapis myślowy ABC"}
         </h2>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-muted-foreground">Przed:</span>
@@ -212,7 +228,7 @@ Zachowanie: Co robiłeś?"
             data-testid="button-analyze-abc"
           >
             <Search className="h-4 w-4 mr-2" />
-            {isAnalyzing ? "Analizowanie..." : "Analizuj myśli"}
+            {isAnalyzing ? "Analizowanie..." : (editingSchema ? "Analizuj ponownie" : "Analizuj myśli")}
           </Button>
           <Button 
             variant="outline"
@@ -221,8 +237,19 @@ Zachowanie: Co robiłeś?"
             data-testid="button-save-draft"
           >
             <Save className="h-4 w-4 mr-2" />
-            Zapisz szkic
+            {editingSchema ? "Zaktualizuj" : "Zapisz szkic"}
           </Button>
+          {editingSchema && (
+            <Button 
+              variant="ghost"
+              onClick={() => {
+                if (onCancelEdit) onCancelEdit();
+              }}
+              data-testid="button-cancel-edit"
+            >
+              Anuluj edycję
+            </Button>
+          )}
         </div>
         <Button 
           variant="outline"

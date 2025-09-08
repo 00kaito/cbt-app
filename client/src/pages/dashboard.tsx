@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import Navigation from "@/components/navigation";
 import MoodScale from "@/components/mood-scale";
@@ -5,14 +6,17 @@ import ABCSchemaForm from "@/components/abc-schema-form";
 import AIAnalysis from "@/components/ai-analysis";
 import MoodChart from "@/components/mood-chart";
 import ExerciseLibrary from "@/components/exercise-library";
+import MyAbcSchemas from "@/components/my-abc-schemas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Brain, Edit, Share } from "lucide-react";
 import { format } from "date-fns";
+import { AbcSchema } from "@shared/schema";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [editingSchema, setEditingSchema] = useState<AbcSchema | null>(null);
 
   const { data: recentActivities } = useQuery({
     queryKey: ["/api/exercise-completions"],
@@ -102,11 +106,18 @@ export default function Dashboard() {
         </div>
 
         {/* ABC Schema Form */}
-        <ABCSchemaForm />
+        <ABCSchemaForm 
+          editingSchema={editingSchema}
+          onCancelEdit={() => setEditingSchema(null)}
+        />
+
+        {/* My ABC Schemas */}
+        <MyAbcSchemas 
+          onEditSchema={(schema) => setEditingSchema(schema)}
+        />
 
         {/* AI Analysis */}
         <AIAnalysis />
-
 
         {/* Exercise Library */}
         <ExerciseLibrary />

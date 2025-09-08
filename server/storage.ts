@@ -223,6 +223,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async deleteAbcSchema(id: string): Promise<void> {
+    await db.delete(abcSchemas).where(eq(abcSchemas.id, id));
+  }
+
   async getExercises(): Promise<Exercise[]> {
     const dbExercises = await db.select().from(exercises).orderBy(asc(exercises.title));
     

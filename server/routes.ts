@@ -151,15 +151,48 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/abc-schemas/:id/share", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const { therapistId } = req.body;
-      if (!therapistId) {
-        return res.status(400).json({ message: "Therapist ID is required" });
+      // Get assigned therapists for the patient
+      const therapists = await storage.getPatientTherapists(req.user!.id);
+      if (!therapists || therapists.length === 0) {
+        return res.status(400).json({ message: "No therapist assigned" });
       }
 
+      // Use first assigned therapist
+      const therapistId = therapists[0].id;
       await storage.shareAbcSchemaWithTherapist(req.params.id, therapistId);
       res.json({ message: "ABC schema shared with therapist" });
     } catch (error) {
       res.status(500).json({ message: "Failed to share ABC schema" });
+    }
+  });
+
+  app.patch("/api/abc-schemas/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const schema = await storage.getAbcSchema(req.params.id);
+      if (!schema || schema.userId !== req.user!.id) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+      
+      const updatedSchema = await storage.updateAbcSchema(req.params.id, req.body);
+      res.json(updatedSchema);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update ABC schema" });
+    }
+  });
+
+  app.delete("/api/abc-schemas/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const schema = await storage.getAbcSchema(req.params.id);
+      if (!schema || schema.userId !== req.user!.id) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+      
+      await storage.deleteAbcSchema(req.params.id);
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete ABC schema" });
     }
   });
 
