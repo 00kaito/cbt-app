@@ -316,20 +316,40 @@ export function registerRoutes(app: Express): Server {
     try {
       const patients = await storage.getTherapistPatients(req.user!.id);
       
-      // Enrich each patient with summary data
-      const enrichedPatients = await Promise.all(
-        patients.map(async (patient) => {
-          const summary = await storage.getPatientSummaryForTherapist(patient.id, req.user!.id);
-          return {
-            ...patient,
-            latestMood: summary.latestMood,
-            newItemsSinceLastVisit: summary.newItemsSinceLastVisit
-          };
-        })
-      );
-      
-      res.json(enrichedPatients);
+      // Try to enrich each patient with summary data, fallback to basic data if error
+      try {
+        const enrichedPatients = await Promise.all(
+          patients.map(async (patient) => {
+            try {
+              const summary = await storage.getPatientSummaryForTherapist(patient.id, req.user!.id);
+              return {
+                ...patient,
+                latestMood: summary.latestMood,
+                newItemsSinceLastVisit: summary.newItemsSinceLastVisit
+              };
+            } catch (error) {
+              // Fallback to basic patient data if enrichment fails
+              return {
+                ...patient,
+                latestMood: null,
+                newItemsSinceLastVisit: 0
+              };
+            }
+          })
+        );
+        res.json(enrichedPatients);
+      } catch (error) {
+        // If enrichment completely fails, return basic patient data
+        console.error("Patient enrichment failed:", error);
+        const basicPatients = patients.map(patient => ({
+          ...patient,
+          latestMood: null,
+          newItemsSinceLastVisit: 0
+        }));
+        res.json(basicPatients);
+      }
     } catch (error) {
+      console.error("Failed to fetch patients:", error);
       res.status(500).json({ message: "Failed to fetch patients" });
     }
   });
