@@ -6,12 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, User, Calendar, FileText, Share, TrendingUp, CheckCircle, Clock, Eye, Activity } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
 
 export default function PatientDetail() {
   const { user } = useAuth();
   const params = useParams();
   const [location] = useLocation();
+  const [selectedAbcSchema, setSelectedAbcSchema] = useState<any>(null);
+  const [abcExercises, setAbcExercises] = useState<any[]>([]);
+  const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
   
   // Extract patient ID from URL path
   const patientId = params.id || location.split('/').pop();
@@ -42,6 +55,20 @@ export default function PatientDetail() {
   });
   
   const sharedSchemas = sharedData?.abcSchemas || [];
+
+  const handleViewAbcExercises = async (abcSchema: any) => {
+    try {
+      const response = await fetch(`/api/abc-schemas/${abcSchema.id}/exercises`);
+      if (response.ok) {
+        const exercises = await response.json();
+        setAbcExercises(exercises);
+        setSelectedAbcSchema(abcSchema);
+        setExerciseModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch related exercises:", error);
+    }
+  };
 
   if (user?.role !== "therapist") {
     return (
@@ -182,7 +209,7 @@ export default function PatientDetail() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Share className="h-5 w-5" />
-              <span>Shared ABC Thought Records ({sharedSchemas.length})</span>
+              <span>Udostępnione zapisy ABC ({sharedSchemas.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -194,34 +221,44 @@ export default function PatientDetail() {
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-primary" />
                         <span className="font-medium text-foreground">
-                          ABC Thought Record
+                          Zapis myślowy ABC
                         </span>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(schema.createdAt).toLocaleDateString()}
+                      <div className="flex items-center space-x-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewAbcExercises(schema)}
+                        >
+                          <Activity className="h-4 w-4 mr-2" />
+                          Zobacz powiązane ćwiczenia
+                        </Button>
+                        <div className="text-sm text-muted-foreground">
+                          {format(new Date(schema.createdAt), "dd.MM.yyyy", { locale: pl })}
+                        </div>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
                       <div>
-                        <label className="font-medium text-foreground">A - Activating Event:</label>
+                        <label className="font-medium text-foreground">A - Zdarzenie wyzwalające:</label>
                         <p className="text-muted-foreground mt-1">{schema.activatingEvent}</p>
                       </div>
                       <div>
-                        <label className="font-medium text-foreground">B - Beliefs:</label>
+                        <label className="font-medium text-foreground">B - Przekonania:</label>
                         <p className="text-muted-foreground mt-1">{schema.beliefs}</p>
                       </div>
                       <div>
-                        <label className="font-medium text-foreground">C - Consequences:</label>
+                        <label className="font-medium text-foreground">C - Konsekwencje:</label>
                         <p className="text-muted-foreground mt-1">{schema.consequences}</p>
                       </div>
                     </div>
 
-                    {schema.analysis && (
+                    {schema.analysisResults && (
                       <div className="mt-4 pt-4 border-t">
-                        <label className="font-medium text-foreground">Analysis:</label>
+                        <label className="font-medium text-foreground">Analiza AI:</label>
                         <div className="mt-2 space-y-2">
-                          {schema.analysis.distortions?.map((distortion: any, idx: number) => (
+                          {schema.analysisResults.distortions?.map((distortion: any, idx: number) => (
                             <div key={idx} className="text-sm">
                               <span className="font-medium text-orange-600">{distortion.type}</span>
                               <span className="text-muted-foreground"> - {distortion.description}</span>
@@ -237,24 +274,24 @@ export default function PatientDetail() {
               <div className="text-center py-8">
                 <Share className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  No shared thought records yet
+                  Brak udostępnionych zapisów myślowych
                 </p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Exercise Completions Section */}
-        {exerciseCompletions && exerciseCompletions.length > 0 && (
+        {/* Exercise Completions Section - only therapist assigned exercises without ABC relationship */}
+        {exerciseCompletions && exerciseCompletions.filter((completion: any) => !completion.abcSchemaId).length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2" data-testid="text-exercise-completions">
                 <CheckCircle className="h-5 w-5" />
-                <span>Exercise Completions ({exerciseCompletions.length})</span>
+                <span>Ćwiczenia zlecone przez terapeutę ({exerciseCompletions.filter((completion: any) => !completion.abcSchemaId).length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {exerciseCompletions.map((completion: any) => (
+              {exerciseCompletions.filter((completion: any) => !completion.abcSchemaId).map((completion: any) => (
                 <div
                   key={completion.id}
                   className="border rounded-lg p-4 space-y-3"
@@ -340,6 +377,103 @@ export default function PatientDetail() {
             </CardContent>
           </Card>
         )}
+
+      {/* ABC Exercises Modal */}
+      <Dialog open={exerciseModalOpen} onOpenChange={setExerciseModalOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ćwiczenia powiązane z zapisem ABC</DialogTitle>
+            <DialogDescription>
+              Ćwiczenia wykonane przez pacjenta w związku z tym zapisem myślowym
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAbcSchema && (
+            <div className="space-y-6">
+              {/* ABC Schema Summary */}
+              <div className="bg-muted/30 rounded-lg p-4">
+                <h3 className="font-medium text-foreground mb-3">Podsumowanie zapisu ABC:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-foreground">A - Zdarzenie:</span>
+                    <p className="text-muted-foreground mt-1">{selectedAbcSchema.activatingEvent}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-foreground">B - Przekonania:</span>
+                    <p className="text-muted-foreground mt-1">{selectedAbcSchema.beliefs}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-foreground">C - Konsekwencje:</span>
+                    <p className="text-muted-foreground mt-1">{selectedAbcSchema.consequences}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Related Exercises */}
+              {abcExercises && abcExercises.length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-foreground">Wykonane ćwiczenia:</h3>
+                  {abcExercises.map((completion: any) => (
+                    <div key={completion.id} className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-foreground">{completion.exercise.title}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{completion.exercise.description}</p>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {format(new Date(completion.completedAt), "dd.MM.yyyy HH:mm", { locale: pl })}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {completion.response && (
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Odpowiedź pacjenta:</p>
+                            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded mt-1">
+                              {completion.response}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center space-x-6 text-sm">
+                          {completion.moodBefore && completion.moodAfter && (
+                            <div className="flex items-center gap-2">
+                              <TrendingUp 
+                                className={`h-4 w-4 ${
+                                  completion.moodAfter > completion.moodBefore 
+                                    ? 'text-green-600' 
+                                    : completion.moodAfter < completion.moodBefore 
+                                      ? 'text-red-600' 
+                                      : 'text-gray-600'
+                                }`} 
+                              />
+                              <span className="text-muted-foreground">
+                                Nastrój: {completion.moodBefore} → {completion.moodAfter}
+                              </span>
+                            </div>
+                          )}
+                          {completion.effectiveness !== undefined && (
+                            <Badge variant="secondary">
+                              {Math.round(completion.effectiveness * 100)}% skuteczności
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    Brak ćwiczeń powiązanych z tym zapisem ABC
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </main>
     </div>
   );

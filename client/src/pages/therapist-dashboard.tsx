@@ -261,11 +261,9 @@ export default function TherapistDashboard() {
                         variant="outline" 
                         size="sm" 
                         className="flex-1" 
-                        onClick={() => handleViewAbcSchemas(patient)}
-                        data-testid={`button-view-abc-${patient.id}`}
+                        data-testid={`button-schedule-${patient.id}`}
                       >
-                        <Brain className="h-4 w-4 mr-1" />
-                        ABC
+                        Zaplanuj
                       </Button>
                     </div>
                   </CardContent>
