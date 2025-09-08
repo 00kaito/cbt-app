@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Clock, Play, BookOpen, CheckCircle, Calendar } from "lucide-react";
-import { Exercise, ExerciseCompletion } from "@shared/schema";
+import { TherapistExercise, ExerciseCompletion } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -11,12 +11,12 @@ import ExerciseCompletionModal from "./exercise-completion-modal";
 
 export default function ExerciseLibrary() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<TherapistExercise | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: exercises } = useQuery<Exercise[]>({
-    queryKey: ["/api/exercises"],
+  const { data: exercises } = useQuery<TherapistExercise[]>({
+    queryKey: ["/api/patient/exercises"],
   });
 
   const { data: completions } = useQuery<ExerciseCompletion[]>({
@@ -56,56 +56,14 @@ export default function ExerciseLibrary() {
     },
   });
 
-  const handleStartExercise = (exercise: Exercise) => {
+  const handleStartExercise = (exercise: TherapistExercise) => {
     setSelectedExercise(exercise);
     setModalOpen(true);
   };
 
-  const mockExercises: Exercise[] = [
-    {
-      id: "evidence-examination",
-      title: "Evidence Examination",
-      description: "Examine the evidence for and against your negative thoughts",
-      instructions: "List all evidence supporting your thought, then list evidence against it. Compare both lists objectively.",
-      category: "Thought Challenging",
-      targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
-      estimatedDuration: 15,
-      difficulty: "medium",
-    },
-    {
-      id: "balanced-thinking",
-      title: "Balanced Thinking",
-      description: "Reframe negative thoughts into more balanced, realistic perspectives",
-      instructions: "Take your negative thought and rewrite it in a more balanced, fair way that considers multiple perspectives.",
-      category: "Cognitive Restructuring",
-      targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
-      estimatedDuration: 10,
-      difficulty: "easy",
-    },
-    {
-      id: "thought-challenging",
-      title: "Thought Challenging",
-      description: "Question the validity and helpfulness of negative thoughts",
-      instructions: "Ask yourself: Is this thought helpful? Is it realistic? What would I tell a friend having this thought?",
-      category: "Thought Challenging",
-      targetDistortions: ["overgeneralization", "mind-reading"],
-      estimatedDuration: 12,
-      difficulty: "medium",
-    },
-    {
-      id: "mindfulness-exercise",
-      title: "Mindfulness Breathing",
-      description: "Practice present-moment awareness through focused breathing",
-      instructions: "Focus on your breath for 5-10 minutes. When your mind wanders, gently return attention to breathing.",
-      category: "Mindfulness",
-      targetDistortions: ["emotional-reasoning", "worry"],
-      estimatedDuration: 10,
-      difficulty: "easy",
-    },
-  ];
-
-  const displayExercises = exercises || mockExercises;
-  const categories = Array.from(new Set(displayExercises.map(ex => ex.category)));
+  // Use only exercises assigned by therapist
+  const displayExercises = exercises || [];
+  const categories = ["all", ...Array.from(new Set(displayExercises.map(ex => ex.category)))];
 
   const filteredExercises = selectedCategory === "all" 
     ? displayExercises 

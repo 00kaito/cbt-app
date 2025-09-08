@@ -8,7 +8,8 @@ import {
   insertMoodEntrySchema,
   insertAbcSchemaSchema,
   insertExerciseCompletionSchema,
-  insertTherapistPatientSchema
+  insertTherapistPatientSchema,
+  insertTherapistExerciseSchema
 } from "@shared/schema";
 
 export function registerRoutes(app: Express): Server {
@@ -393,6 +394,65 @@ export function registerRoutes(app: Express): Server {
       res.json(sharedData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shared data" });
+    }
+  });
+
+  // Therapist exercises endpoints
+  app.get("/api/therapist/patient/:patientId/exercises", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const patientId = req.params.patientId;
+      
+      // Verify this patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+      
+      const exercises = await storage.getTherapistExercisesForPatient(patientId);
+      res.json(exercises);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patient exercises" });
+    }
+  });
+
+  app.post("/api/therapist/exercises", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      // Verify patient is assigned to this therapist
+      const patients = await storage.getTherapistPatients(req.user!.id);
+      const patient = patients.find(p => p.id === req.body.patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      }
+
+      const validatedData = insertTherapistExerciseSchema.parse({
+        ...req.body,
+        therapistId: req.user!.id
+      });
+      
+      const exercise = await storage.createTherapistExercise(validatedData);
+      res.status(201).json(exercise);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid exercise data" });
+    }
+  });
+
+  // Get exercises assigned to current patient
+  app.get("/api/patient/exercises", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const exercises = await storage.getTherapistExercisesForPatient(req.user!.id);
+      res.json(exercises);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assigned exercises" });
     }
   });
 

@@ -92,6 +92,20 @@ export const therapistPatients = pgTable("therapist_patients", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const therapistExercises = pgTable("therapist_exercises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  therapistId: varchar("therapist_id").notNull().references(() => users.id),
+  patientId: varchar("patient_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  instructions: text("instructions").notNull(),
+  category: text("category").notNull(),
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  difficulty: text("difficulty").notNull(), // "easy", "medium", "hard"
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const sharedData = pgTable("shared_data", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").notNull().references(() => users.id),
@@ -165,6 +179,19 @@ export const therapistPatientsRelations = relations(therapistPatients, ({ one })
   }),
 }));
 
+export const therapistExercisesRelations = relations(therapistExercises, ({ one }) => ({
+  therapist: one(users, {
+    fields: [therapistExercises.therapistId],
+    references: [users.id],
+    relationName: "therapist",
+  }),
+  patient: one(users, {
+    fields: [therapistExercises.patientId],
+    references: [users.id],
+    relationName: "patient",
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -200,6 +227,11 @@ export const insertTherapistPatientSchema = createInsertSchema(therapistPatients
   createdAt: true,
 });
 
+export const insertTherapistExerciseSchema = createInsertSchema(therapistExercises).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -214,4 +246,6 @@ export type ExerciseCompletion = typeof exerciseCompletions.$inferSelect;
 export type InsertExerciseCompletion = z.infer<typeof insertExerciseCompletionSchema>;
 export type TherapistPatient = typeof therapistPatients.$inferSelect;
 export type InsertTherapistPatient = z.infer<typeof insertTherapistPatientSchema>;
+export type TherapistExercise = typeof therapistExercises.$inferSelect;
+export type InsertTherapistExercise = z.infer<typeof insertTherapistExerciseSchema>;
 export type SharedData = typeof sharedData.$inferSelect;

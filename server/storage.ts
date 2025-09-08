@@ -6,6 +6,7 @@ import {
   exercises,
   exerciseCompletions,
   therapistPatients,
+  therapistExercises,
   sharedData,
   type User, 
   type InsertUser,
@@ -20,6 +21,8 @@ import {
   type InsertExerciseCompletion,
   type TherapistPatient,
   type InsertTherapistPatient,
+  type TherapistExercise,
+  type InsertTherapistExercise,
   type SharedData
 } from "@shared/schema";
 import { db } from "./db";
@@ -68,6 +71,12 @@ export interface IStorage {
   getPatientTherapists(patientId: string): Promise<User[]>;
   addTherapistPatient(relationship: InsertTherapistPatient): Promise<TherapistPatient>;
   getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
+
+  // Therapist exercise methods
+  getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]>;
+  createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise>;
+  updateTherapistExercise(id: string, exercise: Partial<InsertTherapistExercise>): Promise<TherapistExercise>;
+  deleteTherapistExercise(id: string): Promise<void>;
 
   // Shared data methods
   getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{
@@ -396,6 +405,41 @@ export class DatabaseStorage implements IStorage {
       ...row.exercise_completions,
       exercise: row.exercises
     }));
+  }
+
+  async getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]> {
+    return await db
+      .select()
+      .from(therapistExercises)
+      .where(and(
+        eq(therapistExercises.patientId, patientId),
+        eq(therapistExercises.isActive, true)
+      ))
+      .orderBy(desc(therapistExercises.createdAt));
+  }
+
+  async createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise> {
+    const [created] = await db
+      .insert(therapistExercises)
+      .values(exercise)
+      .returning();
+    return created;
+  }
+
+  async updateTherapistExercise(id: string, exercise: Partial<InsertTherapistExercise>): Promise<TherapistExercise> {
+    const [updated] = await db
+      .update(therapistExercises)
+      .set(exercise)
+      .where(eq(therapistExercises.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTherapistExercise(id: string): Promise<void> {
+    await db
+      .update(therapistExercises)
+      .set({ isActive: false })
+      .where(eq(therapistExercises.id, id));
   }
 
   async getSharedDataForTherapist(therapistId: string, patientId: string): Promise<{
