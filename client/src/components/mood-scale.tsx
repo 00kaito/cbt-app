@@ -129,8 +129,14 @@ export default function MoodScale() {
     // Check if there's already a mood entry for today
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const todayEntry = recentMoods?.find((entry: any) => {
-      const entryDate = new Date(entry.recordedAt).toISOString().split('T')[0];
-      return entryDate === today;
+      if (!entry.recordedAt) return false;
+      try {
+        const entryDate = new Date(entry.recordedAt).toISOString().split('T')[0];
+        return entryDate === today;
+      } catch (error) {
+        console.error('Invalid date format for entry:', entry);
+        return false;
+      }
     });
 
     const moodData = {

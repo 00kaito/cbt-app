@@ -19,7 +19,15 @@ export default function MoodChart() {
     const daysAgo = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
     
-    return moodEntries.filter(entry => new Date(entry.recordedAt) >= cutoffDate);
+    return moodEntries.filter(entry => {
+      if (!entry.recordedAt) return false;
+      try {
+        return new Date(entry.recordedAt) >= cutoffDate;
+      } catch (error) {
+        console.error('Invalid date in mood entry:', entry);
+        return false;
+      }
+    });
   }, [moodEntries, timeRange]);
 
   return (
