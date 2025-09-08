@@ -5,17 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen, Clock, Edit, Trash2 } from "lucide-react";
+import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen, Clock, Edit, Trash2, Eye, Brain } from "lucide-react";
 import { Link } from "wouter";
-import { User } from "@shared/schema";
+import { User, AbcSchema, ExerciseCompletion, Exercise, TherapistExercise } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 export default function TherapistDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<User | null>(null);
+  const [selectedAbcSchema, setSelectedAbcSchema] = useState<AbcSchema | null>(null);
+  const [abcModalOpen, setAbcModalOpen] = useState(false);
+  const [abcExercises, setAbcExercises] = useState<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]>([]);
 
   const { data: patients, isLoading } = useQuery<User[]>({
     queryKey: ["/api/therapist/patients"],
@@ -48,6 +62,30 @@ export default function TherapistDashboard() {
       });
     },
   });
+
+  const handleViewAbcSchemas = async (patient: User) => {
+    try {
+      // Fetch patient's ABC schemas - display them in a modal or navigate to a page
+      window.location.href = `/therapist/patient/${patient.id}#abc-schemas`;
+    } catch (error) {
+      console.error("Failed to navigate to ABC schemas:", error);
+    }
+  };
+
+  const handleViewAbcDetails = async (abcSchema: AbcSchema) => {
+    try {
+      // Fetch exercises related to this ABC schema
+      const response = await fetch(`/api/abc-schemas/${abcSchema.id}/exercises`);
+      if (response.ok) {
+        const exercises = await response.json();
+        setAbcExercises(exercises);
+        setSelectedAbcSchema(abcSchema);
+        setAbcModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch related exercises:", error);
+    }
+  };
 
   if (user?.role !== "therapist") {
     return (
@@ -223,9 +261,11 @@ export default function TherapistDashboard() {
                         variant="outline" 
                         size="sm" 
                         className="flex-1" 
-                        data-testid={`button-schedule-${patient.id}`}
+                        onClick={() => handleViewAbcSchemas(patient)}
+                        data-testid={`button-view-abc-${patient.id}`}
                       >
-                        Zaplanuj
+                        <Brain className="h-4 w-4 mr-1" />
+                        ABC
                       </Button>
                     </div>
                   </CardContent>
@@ -354,6 +394,136 @@ export default function TherapistDashboard() {
         patients={patients || []}
         isLoading={createExerciseMutation.isPending}
       />
+
+      {/* ABC Schema Modal */}
+      <Dialog open={abcModalOpen} onOpenChange={setAbcModalOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Zapis myślowy ABC - Powiązane ćwiczenia</DialogTitle>
+            <DialogDescription>
+              Szczegóły zapisu ABC pacjenta oraz wykonane ćwiczenia powiązane z tym zapisem
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedAbcSchema && (
+            <div className="space-y-6">
+              {/* ABC Schema Content */}
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                      <span className="text-primary font-semibold text-sm">A</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Zdarzenie wyzwalające</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.activatingEvent}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
+                      <span className="text-secondary font-semibold text-sm">B</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Przekonania i myśli</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.beliefs}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <span className="text-accent font-semibold text-sm">C</span>
+                    </div>
+                    <h3 className="font-medium text-foreground">Konsekwencje</h3>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/30 p-3 rounded">
+                    {selectedAbcSchema.consequences}
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground border-t pt-4">
+                  <span>Nastrój przed: {selectedAbcSchema.moodBefore}/7</span>
+                  <span>Data utworzenia: {format(new Date(selectedAbcSchema.createdAt), "dd.MM.yyyy HH:mm", { locale: pl })}</span>
+                </div>
+              </div>
+
+              {/* AI Analysis Results */}
+              {selectedAbcSchema.analysisResults && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="font-semibold text-foreground">Wyniki analizy AI</h3>
+                  
+                  {selectedAbcSchema.analysisResults.distortions?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-foreground mb-2">Wykryte zniekształcenia:</h4>
+                      <div className="space-y-2">
+                        {selectedAbcSchema.analysisResults.distortions.map((distortion, index) => (
+                          <div key={index} className="bg-destructive/10 border border-destructive/20 rounded p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-foreground">{distortion.type}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {Math.round(distortion.confidence * 100)}% pewności
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">{distortion.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Related Exercises */}
+              {abcExercises && abcExercises.length > 0 && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="font-semibold text-foreground">Wykonane ćwiczenia powiązane z tym zapisem</h3>
+                  <div className="space-y-3">
+                    {abcExercises.map((completion) => (
+                      <div key={completion.id} className="bg-primary/5 border border-primary/20 rounded p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-foreground">{completion.exercise.title}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">{completion.exercise.description}</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                Nastrój przed: {completion.moodBefore}/7
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Nastrój po: {completion.moodAfter}/7
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(completion.completedAt), "dd.MM.yyyy HH:mm", { locale: pl })}
+                              </span>
+                            </div>
+                            {completion.response && (
+                              <div className="mt-3">
+                                <p className="text-sm font-medium text-foreground">Odpowiedź pacjenta:</p>
+                                <p className="text-sm text-muted-foreground bg-muted/30 p-2 rounded mt-1">
+                                  {completion.response}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(!abcExercises || abcExercises.length === 0) && (
+                <div className="text-center py-6 border-t">
+                  <p className="text-muted-foreground">Brak wykonanych ćwiczeń powiązanych z tym zapisem ABC</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
