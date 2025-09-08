@@ -703,19 +703,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTherapistPatientVisit(therapistId: string, patientId: string): Promise<void> {
-    await db
-      .insert(therapistPatientVisits)
-      .values({
-        therapistId,
-        patientId,
-        lastVisitAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [therapistPatientVisits.therapistId, therapistPatientVisits.patientId],
-        set: {
+    // Try to find existing visit record
+    const [existingVisit] = await db
+      .select()
+      .from(therapistPatientVisits)
+      .where(and(
+        eq(therapistPatientVisits.therapistId, therapistId),
+        eq(therapistPatientVisits.patientId, patientId)
+      ));
+
+    if (existingVisit) {
+      // Update existing record
+      await db
+        .update(therapistPatientVisits)
+        .set({ lastVisitAt: new Date() })
+        .where(and(
+          eq(therapistPatientVisits.therapistId, therapistId),
+          eq(therapistPatientVisits.patientId, patientId)
+        ));
+    } else {
+      // Create new record
+      await db
+        .insert(therapistPatientVisits)
+        .values({
+          therapistId,
+          patientId,
           lastVisitAt: new Date(),
-        }
-      });
+        });
+    }
   }
 
   async getPatientSummaryForTherapist(patientId: string, therapistId: string): Promise<{
@@ -768,7 +783,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       latestMood: latestMoodEntry ? {
-        value: latestMoodEntry.value,
+        value: latestMoodEntry.moodLevel,
         date: latestMoodEntry.createdAt
       } : null,
       newItemsSinceLastVisit: newItemsCount
