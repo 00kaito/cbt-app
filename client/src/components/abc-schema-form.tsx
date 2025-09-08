@@ -23,6 +23,13 @@ export default function ABCSchemaForm({ editingSchema, onCancelEdit }: ABCSchema
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastCreatedSchemaId, setLastCreatedSchemaId] = useState<string | null>(null);
+  
+  // Clear analysis state on logout
+  useEffect(() => {
+    return () => {
+      setLastCreatedSchemaId(null);
+    };
+  }, []);
   const { toast } = useToast();
 
   // Update form data when editing schema changes

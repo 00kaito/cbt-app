@@ -510,19 +510,24 @@ export function registerRoutes(app: Express): Server {
     try {
       const abcSchemaId = req.params.id;
       
+      // Verify ABC schema exists and user has access
+      const abcSchema = await storage.getAbcSchema(abcSchemaId);
+      if (!abcSchema) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+
       // For therapists, verify they have access to this ABC schema
       if (req.user!.role === "therapist") {
-        // Check if the ABC schema is shared with this therapist
-        const sharedData = await storage.getSharedDataForTherapist(req.user!.id, "");
-        const hasAccess = sharedData.abcSchemas.some((schema: any) => schema.id === abcSchemaId);
+        // Get all patients for this therapist to check access
+        const patients = await storage.getTherapistPatients(req.user!.id);
+        const hasAccess = patients.some(patient => patient.id === abcSchema.userId);
         
         if (!hasAccess) {
           return res.status(403).json({ message: "Access denied to this ABC schema" });
         }
       } else {
         // For patients, verify they own this ABC schema
-        const abcSchema = await storage.getAbcSchema(abcSchemaId);
-        if (!abcSchema || abcSchema.userId !== req.user!.id) {
+        if (abcSchema.userId !== req.user!.id) {
           return res.status(403).json({ message: "Access denied to this ABC schema" });
         }
       }

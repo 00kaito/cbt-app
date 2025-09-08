@@ -28,12 +28,14 @@ export default function AIAnalysis() {
       response: string;
       moodBefore: number;
       moodAfter: number;
+      abcSchemaId?: string;
     }) => {
       const res = await apiRequest("POST", "/api/exercise-completions", {
         exerciseId: data.exerciseId,
         response: data.response,
         moodBefore: data.moodBefore,
         moodAfter: data.moodAfter,
+        abcSchemaId: data.abcSchemaId,
       });
       return res.json();
     },
@@ -223,7 +225,12 @@ export default function AIAnalysis() {
           setModalOpen(false);
           setSelectedExercise(null);
         }}
-        onComplete={completeExerciseMutation.mutate}
+        onComplete={(data) => {
+          completeExerciseMutation.mutate({
+            ...data,
+            abcSchemaId: latestAnalyzedSchema?.id
+          });
+        }}
         isLoading={completeExerciseMutation.isPending}
       />
     </section>
