@@ -1,14 +1,103 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Bot, AlertTriangle, ArrowRight, Info } from "lucide-react";
-import { AbcSchema } from "@shared/schema";
+import { AbcSchema, Exercise } from "@shared/schema";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import ExerciseCompletionModal from "./exercise-completion-modal";
 
 export default function AIAnalysis() {
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const { toast } = useToast();
+
   const { data: abcSchemas } = useQuery<AbcSchema[]>({
     queryKey: ["/api/abc-schemas"],
   });
+
+  const { data: exercises } = useQuery<Exercise[]>({
+    queryKey: ["/api/exercises"],
+  });
+
+  const completeExerciseMutation = useMutation({
+    mutationFn: async (data: {
+      exerciseId: string;
+      response: string;
+      moodBefore: number;
+      moodAfter: number;
+    }) => {
+      const res = await apiRequest("POST", "/api/exercise-completions", {
+        exerciseId: data.exerciseId,
+        response: data.response,
+        moodBefore: data.moodBefore,
+        moodAfter: data.moodAfter,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/exercise-completions"] });
+      setModalOpen(false);
+      setSelectedExercise(null);
+      toast({
+        title: "Exercise completed!",
+        description: "Your progress has been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save exercise completion.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartExercise = (exerciseId: string) => {
+    // Find exercise from the mock list or fetched exercises
+    const mockExercises: Exercise[] = [
+      {
+        id: "evidence-examination",
+        title: "Evidence Examination",
+        description: "Examine the evidence for and against your negative thoughts",
+        instructions: "List all evidence supporting your thought, then list evidence against it. Compare both lists objectively.",
+        category: "Thought Challenging",
+        targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
+        estimatedDuration: 15,
+        difficulty: "medium",
+      },
+      {
+        id: "balanced-thinking",
+        title: "Balanced Thinking",
+        description: "Reframe negative thoughts into more balanced, realistic perspectives",
+        instructions: "Take your negative thought and rewrite it in a more balanced, fair way that considers multiple perspectives.",
+        category: "Cognitive Restructuring",
+        targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
+        estimatedDuration: 10,
+        difficulty: "easy",
+      },
+      {
+        id: "thought-challenging",
+        title: "Thought Challenging",
+        description: "Question the validity and helpfulness of negative thoughts",
+        instructions: "Ask yourself: Is this thought helpful? Is it realistic? What would I tell a friend having this thought?",
+        category: "Thought Challenging",
+        targetDistortions: ["overgeneralization", "mind-reading"],
+        estimatedDuration: 12,
+        difficulty: "medium",
+      },
+    ];
+
+    const allExercises = [...(exercises || []), ...mockExercises];
+    const exercise = allExercises.find(ex => ex.id === exerciseId);
+    
+    if (exercise) {
+      setSelectedExercise(exercise);
+      setModalOpen(true);
+    }
+  };
 
   // Get the most recent analyzed schema
   const latestAnalyzedSchema = abcSchemas?.find(schema => schema.analysisResults);
@@ -104,6 +193,7 @@ export default function AIAnalysis() {
                     <Button 
                       size="sm"
                       className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                      onClick={() => handleStartExercise(rec.exerciseId)}
                       data-testid={`button-start-exercise-${index}`}
                     >
                       Start
@@ -125,6 +215,17 @@ export default function AIAnalysis() {
           View Exercise Library <ArrowRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
+
+      <ExerciseCompletionModal
+        exercise={selectedExercise}
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedExercise(null);
+        }}
+        onComplete={completeExerciseMutation.mutate}
+        isLoading={completeExerciseMutation.isPending}
+      />
     </section>
   );
 }
