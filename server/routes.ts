@@ -15,6 +15,17 @@ import {
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
+  // Health check endpoint for Docker
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Test database connection with a simple query
+      await storage.getMoodScales("health-check-test"); // Simple query to check DB connection
+      res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+    } catch (error) {
+      res.status(503).json({ status: "unhealthy", error: "Database connection failed" });
+    }
+  });
+
   // Mood Scale routes
   app.get("/api/mood-scales", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
