@@ -87,6 +87,74 @@ The application will be available at `http://localhost:5000` by default.
 
 **Port Configuration**: The port can be changed by setting the `PORT` environment variable (defaults to 5000 if not set).
 
+## Docker Setup (Alternative)
+
+### Prerequisites
+- Docker Engine (20.10+)
+- Docker Compose (2.0+)
+
+### Quick Docker Setup
+
+1. **Prepare environment configuration**:
+```bash
+# Copy the Docker environment template
+cp .env.docker .env
+
+# Edit .env with your configuration:
+# - Set POSTGRES_PASSWORD to a secure password
+# - Set SESSION_SECRET to a secure key (32+ characters)
+# - Optionally add OPENAI_API_KEY for AI features
+```
+
+2. **Start the application**:
+```bash
+# Start database and application services
+docker-compose up -d
+
+# Run database migrations to create tables
+docker-compose --profile tools run migrate
+
+# Check if services are running
+docker-compose ps
+```
+
+3. **Access the application**:
+- Application: http://localhost:5000
+- Database: localhost:5432 (for debugging)
+
+### Docker Management Commands
+
+```bash
+# View application logs
+docker-compose logs -f app
+
+# View database logs  
+docker-compose logs database
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (WARNING: deletes all data)
+docker-compose down -v
+
+# Restart just the application
+docker-compose restart app
+
+# Update and rebuild the application
+docker-compose build app
+docker-compose up -d app
+```
+
+### Production Docker Deployment
+
+```bash
+# Use production configuration
+docker-compose -f docker-compose.prod.yml up -d
+
+# Run migrations for production
+docker-compose -f docker-compose.prod.yml --profile tools run migrate
+```
+
 ## Quickstart Guide
 
 After completing the setup above, follow these steps to test the application:
