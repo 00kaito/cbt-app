@@ -19,7 +19,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies to reduce image size
+# Remove dev dependencies to reduce image size (but keep required production deps)
 RUN npm prune --production
 
 # Create non-root user for security

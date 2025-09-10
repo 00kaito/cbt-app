@@ -1,0 +1,44 @@
+> rest-express@1.0.0 start
+mindbridge-app  | > NODE_ENV=production node dist/index.js
+mindbridge-app  | 
+mindbridge-app  | node:internal/errors:496
+mindbridge-app  |     ErrorCaptureStackTrace(err);
+mindbridge-app  |     ^
+mindbridge-app  | 
+mindbridge-app  | Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /app/dist/index.js
+mindbridge-app  |     at new NodeError (node:internal/errors:405:5)
+mindbridge-app  |     at packageResolve (node:internal/modules/esm/resolve:916:9)
+mindbridge-app  |     at moduleResolve (node:internal/modules/esm/resolve:973:20)
+mindbridge-app  |     at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+mindbridge-app  |     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:404:12)
+mindbridge-app  |     at ModuleLoader.resolve (node:internal/modules/esm/loader:373:25)
+mindbridge-app  |     at ModuleLoader.getModuleJob (node:internal/modules/esm/loader:250:38)
+mindbridge-app  |     at ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:76:39)
+mindbridge-app  |     at link (node:internal/modules/esm/module_job:75:36) {
+mindbridge-app  |   code: 'ERR_MODULE_NOT_FOUND'
+mindbridge-app  | }
+mindbridge-app  | 
+mindbridge-app  | Node.js v18.20.8
+mindbridge-app exited with code 0
+mindbridge-app  | 
+mindbridge-app  | > rest-express@1.0.0 start
+mindbridge-app  | > NODE_ENV=production node dist/index.js
+mindbridge-app  | 
+mindbridge-app  | node:internal/errors:496
+mindbridge-app  |     ErrorCaptureStackTrace(err);
+mindbridge-app  |     ^
+mindbridge-app  | 
+mindbridge-app  | Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /app/dist/index.js
+mindbridge-app  |     at new NodeError (node:internal/errors:405:5)
+mindbridge-app  |     at packageResolve (node:internal/modules/esm/resolve:916:9)
+mindbridge-app  |     at moduleResolve (node:internal/modules/esm/resolve:973:20)
+mindbridge-app  |     at defaultResolve (node:internal/modules/esm/resolve:1206:11)
+mindbridge-app  |     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:404:12)
+mindbridge-app  |     at ModuleLoader.resolve (node:internal/modules/esm/loader:373:25)
+mindbridge-app  |     at ModuleLoader.getModuleJob (node:internal/modules/esm/loader:250:38)
+mindbridge-app  |     at ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:76:39)
+mindbridge-app  |     at link (node:internal/modules/esm/module_job:75:36) {
+mindbridge-app  |   code: 'ERR_MODULE_NOT_FOUND'
+mindbridge-app  | }
+mindbridge-app  | 
+mindbridge-app  | Node.js v18.20.8
