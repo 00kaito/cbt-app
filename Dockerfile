@@ -16,8 +16,11 @@ RUN npm install --save-dev esbuild vite typescript @vitejs/plugin-react
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the frontend (outputs to dist/public)
 RUN npm run build
+
+# Build the backend without vite dependencies (outputs to dist/index.prod.js)  
+RUN npx esbuild server/index.prod.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.prod.js
 
 # Remove dev dependencies to reduce image size (but keep required production deps)
 RUN npm prune --production
@@ -38,4 +41,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.prod.js"]

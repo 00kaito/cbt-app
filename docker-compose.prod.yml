@@ -1,5 +1,5 @@
 # Production Docker Compose configuration
-version: '3.8'
+# Removed version as it's obsolete in Docker Compose v2
 
 services:
   # PostgreSQL Database (Production)
