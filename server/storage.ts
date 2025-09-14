@@ -7,6 +7,8 @@ import {
   exerciseCompletions,
   therapistPatients,
   therapistExercises,
+  exerciseTemplates,
+  exerciseAssignments,
   sharedData,
   therapistPatientVisits,
   type User, 
@@ -24,6 +26,10 @@ import {
   type InsertTherapistPatient,
   type TherapistExercise,
   type InsertTherapistExercise,
+  type ExerciseTemplate,
+  type InsertExerciseTemplate,
+  type ExerciseAssignment,
+  type InsertExerciseAssignment,
   type SharedData,
   type TherapistPatientVisit,
   type InsertTherapistPatientVisit
@@ -76,7 +82,22 @@ export interface IStorage {
   removeTherapistPatient(patientId: string, therapistId: string): Promise<void>;
   getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
 
-  // Therapist exercise methods
+  // Exercise Template methods (new system)
+  getExerciseTemplates(therapistId: string): Promise<ExerciseTemplate[]>;
+  getExerciseTemplate(id: string): Promise<ExerciseTemplate | undefined>;
+  createExerciseTemplate(template: InsertExerciseTemplate): Promise<ExerciseTemplate>;
+  updateExerciseTemplate(id: string, template: Partial<InsertExerciseTemplate>): Promise<ExerciseTemplate>;
+  deleteExerciseTemplate(id: string): Promise<void>;
+  duplicateExerciseTemplate(id: string, therapistId: string): Promise<ExerciseTemplate>;
+
+  // Exercise Assignment methods (new system)
+  getExerciseAssignments(patientId: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate })[]>;
+  getExerciseAssignmentsByTherapist(therapistId: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate, patient: User })[]>;
+  getExerciseAssignment(id: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate }) | undefined>;
+  createExerciseAssignment(assignment: InsertExerciseAssignment): Promise<ExerciseAssignment>;
+  deleteExerciseAssignment(id: string): Promise<void>;
+
+  // Therapist exercise methods (legacy - for backward compatibility)
   getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]>;
   getTherapistExercisesByTherapist(therapistId: string): Promise<TherapistExercise[]>;
   getTherapistExercise(id: string): Promise<TherapistExercise | undefined>;
@@ -579,6 +600,150 @@ export class DatabaseStorage implements IStorage {
       .where(eq(therapistExercises.id, exerciseId))
       .limit(1);
     return !!result;
+  }
+
+  // Exercise Template methods (new system)
+  async getExerciseTemplates(therapistId: string): Promise<ExerciseTemplate[]> {
+    return await db
+      .select()
+      .from(exerciseTemplates)
+      .where(and(
+        eq(exerciseTemplates.therapistId, therapistId),
+        eq(exerciseTemplates.isActive, true)
+      ))
+      .orderBy(desc(exerciseTemplates.createdAt));
+  }
+
+  async getExerciseTemplate(id: string): Promise<ExerciseTemplate | undefined> {
+    const [template] = await db.select().from(exerciseTemplates).where(eq(exerciseTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createExerciseTemplate(template: InsertExerciseTemplate): Promise<ExerciseTemplate> {
+    const [created] = await db
+      .insert(exerciseTemplates)
+      .values(template)
+      .returning();
+    return created;
+  }
+
+  async updateExerciseTemplate(id: string, template: Partial<InsertExerciseTemplate>): Promise<ExerciseTemplate> {
+    const [updated] = await db
+      .update(exerciseTemplates)
+      .set(template)
+      .where(eq(exerciseTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteExerciseTemplate(id: string): Promise<void> {
+    await db
+      .update(exerciseTemplates)
+      .set({ isActive: false })
+      .where(eq(exerciseTemplates.id, id));
+  }
+
+  async duplicateExerciseTemplate(id: string, therapistId: string): Promise<ExerciseTemplate> {
+    // Get the original template
+    const original = await this.getExerciseTemplate(id);
+    if (!original) {
+      throw new Error("Template not found");
+    }
+
+    // Create a duplicate with reference to original
+    const duplicateData: InsertExerciseTemplate = {
+      therapistId,
+      title: `${original.title} (kopia)`,
+      description: original.description,
+      instructions: original.instructions,
+      category: original.category,
+      estimatedDuration: original.estimatedDuration,
+      difficulty: original.difficulty,
+      originalTemplateId: original.id,
+      isActive: true,
+    };
+
+    return await this.createExerciseTemplate(duplicateData);
+  }
+
+  // Exercise Assignment methods (new system)
+  async getExerciseAssignments(patientId: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate })[]> {
+    const results = await db
+      .select({
+        assignment: exerciseAssignments,
+        template: exerciseTemplates,
+      })
+      .from(exerciseAssignments)
+      .innerJoin(exerciseTemplates, eq(exerciseAssignments.templateId, exerciseTemplates.id))
+      .where(and(
+        eq(exerciseAssignments.patientId, patientId),
+        eq(exerciseAssignments.isActive, true),
+        eq(exerciseTemplates.isActive, true)
+      ))
+      .orderBy(desc(exerciseAssignments.assignedAt));
+
+    return results.map(row => ({
+      ...row.assignment,
+      template: row.template,
+    }));
+  }
+
+  async getExerciseAssignmentsByTherapist(therapistId: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate, patient: User })[]> {
+    const results = await db
+      .select({
+        assignment: exerciseAssignments,
+        template: exerciseTemplates,
+        patient: users,
+      })
+      .from(exerciseAssignments)
+      .innerJoin(exerciseTemplates, eq(exerciseAssignments.templateId, exerciseTemplates.id))
+      .innerJoin(users, eq(exerciseAssignments.patientId, users.id))
+      .where(and(
+        eq(exerciseAssignments.therapistId, therapistId),
+        eq(exerciseAssignments.isActive, true),
+        eq(exerciseTemplates.isActive, true)
+      ))
+      .orderBy(desc(exerciseAssignments.assignedAt));
+
+    return results.map(row => ({
+      ...row.assignment,
+      template: row.template,
+      patient: row.patient,
+    }));
+  }
+
+  async getExerciseAssignment(id: string): Promise<(ExerciseAssignment & { template: ExerciseTemplate }) | undefined> {
+    const [result] = await db
+      .select({
+        assignment: exerciseAssignments,
+        template: exerciseTemplates,
+      })
+      .from(exerciseAssignments)
+      .innerJoin(exerciseTemplates, eq(exerciseAssignments.templateId, exerciseTemplates.id))
+      .where(eq(exerciseAssignments.id, id))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      ...result.assignment,
+      template: result.template,
+    };
+  }
+
+  async createExerciseAssignment(assignment: InsertExerciseAssignment): Promise<ExerciseAssignment> {
+    const [created] = await db
+      .insert(exerciseAssignments)
+      .values(assignment)
+      .returning();
+    return created;
+  }
+
+  async deleteExerciseAssignment(id: string): Promise<void> {
+    await db
+      .update(exerciseAssignments)
+      .set({ isActive: false })
+      .where(eq(exerciseAssignments.id, id));
   }
 
   async createTherapistExerciseCompletion(completion: InsertExerciseCompletion & { abcSchemaId?: string }): Promise<ExerciseCompletion> {
