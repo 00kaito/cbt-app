@@ -256,6 +256,8 @@ export const insertTherapistPatientSchema = createInsertSchema(therapistPatients
 export const insertTherapistExerciseSchema = createInsertSchema(therapistExercises).omit({
   id: true,
   createdAt: true,
+}).extend({
+  patientId: z.string().uuid().nullable().optional(), // Allow null for recommended exercises
 });
 
 export const insertTherapistPatientVisitSchema = createInsertSchema(therapistPatientVisits).omit({
