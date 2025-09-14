@@ -603,7 +603,13 @@ export function registerRoutes(app: Express): Server {
       const exercise = await storage.createTherapistExercise(validatedData);
       res.status(201).json(exercise);
     } catch (error) {
-      res.status(400).json({ message: "Invalid exercise data" });
+      console.error("Exercise creation error:", error);
+      console.error("Request body:", req.body);
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Invalid exercise data", details: error.message });
+      } else {
+        res.status(400).json({ message: "Invalid exercise data" });
+      }
     }
   });
 
