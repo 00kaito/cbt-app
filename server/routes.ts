@@ -9,9 +9,7 @@ import {
   insertAbcSchemaSchema,
   insertExerciseCompletionSchema,
   insertTherapistPatientSchema,
-  insertTherapistExerciseSchema,
-  insertExerciseTemplateSchema,
-  insertExerciseAssignmentSchema
+  insertTherapistExerciseSchema
 } from "@shared/schema";
 
 export function registerRoutes(app: Express): Server {
@@ -296,7 +294,7 @@ export function registerRoutes(app: Express): Server {
         const therapistExercise = await storage.getTherapistExercise(validatedData.exerciseId);
         const completionData = {
           ...validatedData,
-          abcSchemaId: therapistExercise?.abcSchemaId || undefined
+          abcSchemaId: therapistExercise?.abcSchemaId || null
         };
         const completion = await storage.createTherapistExerciseCompletion(completionData);
         res.status(201).json(completion);
@@ -308,12 +306,7 @@ export function registerRoutes(app: Express): Server {
           validatedData.effectiveness = Math.max(0, improvement / 7); // Normalize to 0-1 scale
         }
 
-        // Ensure abcSchemaId is undefined instead of null for type consistency
-        const completionData = {
-          ...validatedData,
-          abcSchemaId: validatedData.abcSchemaId || undefined
-        };
-        const completion = await storage.createExerciseCompletion(completionData);
+        const completion = await storage.createExerciseCompletion(validatedData);
         res.status(201).json(completion);
       }
     } catch (error) {
@@ -335,26 +328,37 @@ export function registerRoutes(app: Express): Server {
       const patients = await storage.getTherapistPatients(req.user!.id);
       
       // Try to enrich each patient with summary data, fallback to basic data if error
-      const enrichedPatients = await Promise.all(
-        patients.map(async (patient) => {
-          try {
-            const summary = await storage.getPatientSummaryForTherapist(patient.id, req.user!.id);
-            return {
-              ...patient,
-              latestMood: summary.latestMood,
-              newItemsSinceLastVisit: summary.newItemsSinceLastVisit
-            };
-          } catch (error) {
-            // Fallback to basic patient data if enrichment fails
-            return {
-              ...patient,
-              latestMood: null,
-              newItemsSinceLastVisit: 0
-            };
-          }
-        })
-      );
-      res.json(enrichedPatients);
+      try {
+        const enrichedPatients = await Promise.all(
+          patients.map(async (patient) => {
+            try {
+              const summary = await storage.getPatientSummaryForTherapist(patient.id, req.user!.id);
+              return {
+                ...patient,
+                latestMood: summary.latestMood,
+                newItemsSinceLastVisit: summary.newItemsSinceLastVisit
+              };
+            } catch (error) {
+              // Fallback to basic patient data if enrichment fails
+              return {
+                ...patient,
+                latestMood: null,
+                newItemsSinceLastVisit: 0
+              };
+            }
+          })
+        );
+        res.json(enrichedPatients);
+      } catch (error) {
+        // If enrichment completely fails, return basic patient data
+        console.error("Patient enrichment failed:", error);
+        const basicPatients = patients.map(patient => ({
+          ...patient,
+          latestMood: null,
+          newItemsSinceLastVisit: 0
+        }));
+        res.json(basicPatients);
+      }
     } catch (error) {
       console.error("Failed to fetch patients:", error);
       res.status(500).json({ message: "Failed to fetch patients" });
@@ -650,245 +654,6 @@ export function registerRoutes(app: Express): Server {
       res.json(exercises);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch therapist exercises" });
-    }
-  });
-
-  // Exercise Template routes (new system)
-  app.get("/api/exercise-templates", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const templates = await storage.getExerciseTemplates(req.user!.id);
-      res.json(templates);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch exercise templates" });
-    }
-  });
-
-  app.get("/api/exercise-templates/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const template = await storage.getExerciseTemplate(req.params.id);
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      // Verify therapist owns this template
-      if (template.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      res.json(template);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch exercise template" });
-    }
-  });
-
-  app.post("/api/exercise-templates", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const validatedData = insertExerciseTemplateSchema.parse({
-        ...req.body,
-        therapistId: req.user!.id,
-        isActive: true
-      });
-      
-      const template = await storage.createExerciseTemplate(validatedData);
-      res.status(201).json(template);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid template data" });
-    }
-  });
-
-  app.put("/api/exercise-templates/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const template = await storage.getExerciseTemplate(req.params.id);
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      // Verify therapist owns this template
-      if (template.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      // Whitelist only safe fields to prevent privilege escalation
-      const safeFields = ["title", "description", "instructions", "category", "estimatedDuration", "difficulty"];
-      const safeData = Object.keys(req.body)
-        .filter(key => safeFields.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = req.body[key];
-          return obj;
-        }, {} as any);
-      
-      const validatedData = insertExerciseTemplateSchema.partial().parse(safeData);
-      const updated = await storage.updateExerciseTemplate(req.params.id, validatedData);
-      res.json(updated);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid template data" });
-    }
-  });
-
-  app.delete("/api/exercise-templates/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const template = await storage.getExerciseTemplate(req.params.id);
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      // Verify therapist owns this template
-      if (template.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      await storage.deleteExerciseTemplate(req.params.id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete template" });
-    }
-  });
-
-  app.post("/api/exercise-templates/:id/duplicate", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    try {
-      const template = await storage.getExerciseTemplate(req.params.id);
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      // Verify therapist owns this template or can access it
-      if (template.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      const duplicate = await storage.duplicateExerciseTemplate(req.params.id, req.user!.id);
-      res.status(201).json(duplicate);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to duplicate template" });
-    }
-  });
-
-  // Exercise Assignment routes (new system)
-  app.get("/api/exercise-assignments", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-    
-    try {
-      if (req.user!.role === "patient") {
-        // Patient can only see their own assignments
-        const assignments = await storage.getExerciseAssignments(req.user!.id);
-        res.json(assignments);
-      } else if (req.user!.role === "therapist") {
-        // Therapist sees all assignments they created
-        const assignments = await storage.getExerciseAssignmentsByTherapist(req.user!.id);
-        res.json(assignments);
-      } else {
-        return res.sendStatus(403);
-      }
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch exercise assignments" });
-    }
-  });
-
-  app.get("/api/exercise-assignments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-    
-    try {
-      const assignment = await storage.getExerciseAssignment(req.params.id);
-      if (!assignment) {
-        return res.status(404).json({ message: "Assignment not found" });
-      }
-      
-      // Check authorization - patient can only see their own, therapist can see their assignments
-      if (req.user!.role === "patient" && assignment.patientId !== req.user!.id) {
-        return res.sendStatus(403);
-      } else if (req.user!.role === "therapist" && assignment.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      res.json(assignment);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch exercise assignment" });
-    }
-  });
-
-  app.post("/api/exercise-assignments", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    
-    try {
-      // Verify patient is assigned to this therapist
-      const patients = await storage.getTherapistPatients(req.user!.id);
-      const patient = patients.find(p => p.id === req.body.patientId);
-      
-      if (!patient) {
-        return res.status(404).json({ message: "Patient not found or not assigned to you" });
-      }
-      
-      // Verify template exists and belongs to therapist
-      const template = await storage.getExerciseTemplate(req.body.templateId);
-      if (!template || template.therapistId !== req.user!.id) {
-        return res.status(404).json({ message: "Template not found or not accessible" });
-      }
-      
-      // If abcSchemaId is provided, verify it belongs to the specified patient
-      if (req.body.abcSchemaId) {
-        const abcSchema = await storage.getAbcSchema(req.body.abcSchemaId);
-        if (!abcSchema || abcSchema.userId !== req.body.patientId) {
-          return res.status(404).json({ message: "ABC schema not found or not accessible for this patient" });
-        }
-      }
-      
-      const validatedData = insertExerciseAssignmentSchema.parse({
-        ...req.body,
-        therapistId: req.user!.id,
-        isActive: true
-      });
-      
-      const assignment = await storage.createExerciseAssignment(validatedData);
-      res.status(201).json(assignment);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid assignment data" });
-    }
-  });
-
-  app.delete("/api/exercise-assignments/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
-      return res.sendStatus(403);
-    }
-    
-    try {
-      const assignment = await storage.getExerciseAssignment(req.params.id);
-      if (!assignment) {
-        return res.status(404).json({ message: "Assignment not found" });
-      }
-      
-      // Verify therapist owns this assignment
-      if (assignment.therapistId !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-      
-      await storage.deleteExerciseAssignment(req.params.id);
-      res.sendStatus(204);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete assignment" });
     }
   });
 

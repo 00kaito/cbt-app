@@ -4,7 +4,7 @@ import Navigation from "@/components/navigation";
 import MoodScale from "@/components/mood-scale";
 import ABCSchemaForm from "@/components/abc-schema-form";
 import MoodChart from "@/components/mood-chart";
-import PatientExerciseAssignments from "@/components/patient-exercise-assignments";
+import ExerciseLibrary from "@/components/exercise-library";
 import MyAbcSchemas from "@/components/my-abc-schemas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export default function Dashboard() {
               <CardTitle data-testid="text-recent-activity">Ostatnia aktywność</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!recentActivities || recentActivities.length === 0 ? (
+              {recentActivities?.length === 0 ? (
                 <div className="text-center py-8">
                   <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground" data-testid="text-no-activity">
@@ -115,8 +115,8 @@ export default function Dashboard() {
           onEditSchema={(schema) => setEditingSchema(schema)}
         />
 
-        {/* Patient Exercise Assignments */}
-        <PatientExerciseAssignments />
+        {/* Exercise Library */}
+        <ExerciseLibrary />
       </main>
     </div>
   );
