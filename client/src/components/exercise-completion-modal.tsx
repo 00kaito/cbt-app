@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Exercise, TherapistExercise } from "@shared/schema";
+import { Exercise, TherapistExercise, ExerciseTemplate } from "@shared/schema";
 import { useState } from "react";
 import { Clock, Star } from "lucide-react";
 
 interface ExerciseCompletionModalProps {
-  exercise: Exercise | TherapistExercise | null;
+  exercise: Exercise | TherapistExercise | ExerciseTemplate | null;
   isOpen: boolean;
   onClose: () => void;
   onComplete: (data: {
