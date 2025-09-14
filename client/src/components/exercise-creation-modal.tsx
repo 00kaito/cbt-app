@@ -22,7 +22,7 @@ const exerciseFormSchema = z.object({
   description: z.string().min(1, "Opis jest wymagany"), 
   instructions: z.string().min(1, "Instrukcje są wymagane"),
   category: z.string().min(1, "Kategoria jest wymagana"),
-  patientId: z.string().min(1, "Pacjent musi być wybrany"),
+  patientId: z.string().min(1, "Wybór przypisania jest wymagany"),
   estimatedDuration: z.number().min(1).max(120),
   difficulty: z.enum(["easy", "medium", "hard"]),
 });
@@ -71,7 +71,7 @@ export default function ExerciseCreationModal({
       description: selectedAbcSchema ? `Ćwiczenie związane z zapisem myślowym ABC utworzonym ${new Date(selectedAbcSchema.createdAt).toLocaleDateString('pl-PL')}` : "",
       instructions: "",
       category: "",
-      patientId: selectedPatient?.id || "",
+      patientId: selectedPatient?.id || "all",
       estimatedDuration: 15,
       difficulty: "medium",
     },
@@ -228,7 +228,7 @@ export default function ExerciseCreationModal({
                 name="patientId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Przypisz do pacjenta</FormLabel>
+                    <FormLabel>Przypisz ćwiczenie</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
@@ -236,12 +236,15 @@ export default function ExerciseCreationModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Wybierz pacjenta" />
+                          <SelectValue placeholder="Wybierz przypisanie" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="all" data-testid="option-all-patients">
+                          🌟 Wszyscy pacjenci (rekomendowane)
+                        </SelectItem>
                         {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
+                          <SelectItem key={patient.id} value={patient.id} data-testid={`option-patient-${patient.id}`}>
                             {patient.firstName} {patient.lastName}
                           </SelectItem>
                         ))}

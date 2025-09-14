@@ -29,7 +29,7 @@ import {
   type InsertTherapistPatientVisit
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql, isNull, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Seed methods
@@ -66,7 +66,7 @@ export interface IStorage {
 
   // Exercise completion methods
   getExerciseCompletions(userId: string): Promise<ExerciseCompletion[]>;
-  getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
+  getExerciseCompletionsWithExercise(userId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]>;
   createExerciseCompletion(completion: InsertExerciseCompletion): Promise<ExerciseCompletion>;
 
   // Therapist-patient methods
@@ -141,7 +141,7 @@ export class DatabaseStorage implements IStorage {
   async createMoodScale(moodScale: InsertMoodScale): Promise<MoodScale> {
     const [created] = await db
       .insert(moodScales)
-      .values(moodScale)
+      .values(moodScale as any)
       .returning();
     return created;
   }
@@ -149,7 +149,7 @@ export class DatabaseStorage implements IStorage {
   async updateMoodScale(id: string, moodScale: Partial<InsertMoodScale>): Promise<MoodScale> {
     const [updated] = await db
       .update(moodScales)
-      .set(moodScale)
+      .set(moodScale as any)
       .where(eq(moodScales.id, id))
       .returning();
     return updated;
@@ -201,7 +201,7 @@ export class DatabaseStorage implements IStorage {
   async createAbcSchema(abcSchema: InsertAbcSchema): Promise<AbcSchema> {
     const [created] = await db
       .insert(abcSchemas)
-      .values(abcSchema)
+      .values(abcSchema as any)
       .returning();
     return created;
   }
@@ -209,7 +209,7 @@ export class DatabaseStorage implements IStorage {
   async updateAbcSchema(id: string, abcSchema: Partial<InsertAbcSchema>): Promise<AbcSchema> {
     const [updated] = await db
       .update(abcSchemas)
-      .set(abcSchema)
+      .set(abcSchema as any)
       .where(eq(abcSchemas.id, id))
       .returning();
     return updated;
@@ -249,6 +249,7 @@ export class DatabaseStorage implements IStorage {
         moodBefore: exerciseCompletions.moodBefore,
         moodAfter: exerciseCompletions.moodAfter,
         effectiveness: exerciseCompletions.effectiveness,
+        notes: exerciseCompletions.notes,
         completedAt: exerciseCompletions.completedAt,
         abcSchemaId: exerciseCompletions.abcSchemaId,
       })
@@ -260,30 +261,48 @@ export class DatabaseStorage implements IStorage {
     const completionsWithExercises = await Promise.all(
       completions.map(async (completion) => {
         // Try to get from therapist exercises first
-        let exercise = await db
+        const therapistExercise = await db
           .select()
           .from(therapistExercises)
           .where(eq(therapistExercises.id, completion.exerciseId))
           .limit(1)
           .then(rows => rows[0]);
         
+        if (therapistExercise) {
+          return {
+            ...completion,
+            exercise: therapistExercise
+          };
+        }
+
         // If not found in therapist exercises, get from regular exercises
-        if (!exercise) {
-          exercise = await db
-            .select()
-            .from(exercises)
-            .where(eq(exercises.id, completion.exerciseId))
-            .limit(1)
-            .then(rows => rows[0]);
+        const regularExercise = await db
+          .select()
+          .from(exercises)
+          .where(eq(exercises.id, completion.exerciseId))
+          .limit(1)
+          .then(rows => rows[0]);
+        
+        if (regularExercise) {
+          return {
+            ...completion,
+            exercise: regularExercise
+          };
         }
         
+        // Fallback if exercise not found
         return {
           ...completion,
-          exercise: exercise || { 
+          exercise: { 
             id: completion.exerciseId, 
             title: "Deleted Exercise", 
-            description: "This exercise no longer exists" 
-          }
+            description: "This exercise no longer exists",
+            instructions: "This exercise is no longer available",
+            category: "Unknown",
+            targetDistortions: null,
+            estimatedDuration: null,
+            difficulty: "easy"
+          } as Exercise
         };
       })
     );
@@ -522,11 +541,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]> {
+    // SECURITY FIX: Only return exercises from therapists assigned to this patient
+    // First, get all therapists assigned to this patient
+    const assignedTherapists = await db
+      .select({ therapistId: therapistPatients.therapistId })
+      .from(therapistPatients)
+      .where(eq(therapistPatients.patientId, patientId));
+
+    if (assignedTherapists.length === 0) {
+      return []; // No assigned therapists, no exercises
+    }
+
+    const therapistIds = assignedTherapists.map(t => t.therapistId);
+
+    // Return exercises from assigned therapists only
+    // This includes both patient-specific AND recommended exercises, but only from assigned therapists
     return await db
       .select()
       .from(therapistExercises)
       .where(and(
-        eq(therapistExercises.patientId, patientId),
+        // Filter by assigned therapists only
+        inArray(therapistExercises.therapistId, therapistIds),
+        or(
+          eq(therapistExercises.patientId, patientId), // Patient-specific exercises
+          isNull(therapistExercises.patientId)        // Global/recommended exercises from assigned therapists
+        ),
         eq(therapistExercises.isActive, true)
       ))
       .orderBy(desc(therapistExercises.createdAt));

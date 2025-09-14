@@ -96,7 +96,7 @@ export const therapistPatients = pgTable("therapist_patients", {
 export const therapistExercises = pgTable("therapist_exercises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   therapistId: varchar("therapist_id").notNull().references(() => users.id),
-  patientId: varchar("patient_id").notNull().references(() => users.id),
+  patientId: varchar("patient_id").references(() => users.id), // nullable - NULL means available to all patients
   title: text("title").notNull(),
   description: text("description").notNull(),
   instructions: text("instructions").notNull(),
@@ -201,6 +201,7 @@ export const therapistExercisesRelations = relations(therapistExercises, ({ one 
     fields: [therapistExercises.patientId],
     references: [users.id],
     relationName: "patient",
+    // Note: patientId can be null for recommended exercises available to all patients
   }),
 }));
 
@@ -280,3 +281,13 @@ export type InsertTherapistExercise = z.infer<typeof insertTherapistExerciseSche
 export type SharedData = typeof sharedData.$inferSelect;
 export type TherapistPatientVisit = typeof therapistPatientVisits.$inferSelect;
 export type InsertTherapistPatientVisit = z.infer<typeof insertTherapistPatientVisitSchema>;
+
+// Extended types for UI enrichment
+export type EnrichedPatientForTherapist = User & {
+  latestMood: {
+    value: number;
+    maxValue: number;
+    levelName: string;
+  } | null;
+  newItemsSinceLastVisit: number;
+};

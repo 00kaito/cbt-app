@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { UserPlus, Users, TrendingUp, Calendar, Plus, BookOpen, Clock, Edit, Trash2, Eye, Brain } from "lucide-react";
 import { Link } from "wouter";
-import { User, AbcSchema, ExerciseCompletion, Exercise, TherapistExercise } from "@shared/schema";
+import { User, AbcSchema, ExerciseCompletion, Exercise, TherapistExercise, EnrichedPatientForTherapist } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -26,32 +26,40 @@ export default function TherapistDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<User | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<EnrichedPatientForTherapist | null>(null);
   const [selectedAbcSchema, setSelectedAbcSchema] = useState<AbcSchema | null>(null);
   const [abcModalOpen, setAbcModalOpen] = useState(false);
   const [abcExercises, setAbcExercises] = useState<(ExerciseCompletion & { exercise: Exercise | TherapistExercise })[]>([]);
 
-  const { data: patients, isLoading } = useQuery<User[]>({
+  const { data: patients, isLoading } = useQuery<EnrichedPatientForTherapist[]>({
     queryKey: ["/api/therapist/patients"],
     enabled: user?.role === "therapist",
   });
 
-  const { data: therapistExercises, isLoading: exercisesLoading } = useQuery({
+  const { data: therapistExercises, isLoading: exercisesLoading } = useQuery<TherapistExercise[]>({
     queryKey: ["/api/therapist/exercises"],
     enabled: user?.role === "therapist",
   });
 
   const createExerciseMutation = useMutation({
     mutationFn: async (exerciseData: any) => {
-      const res = await apiRequest("POST", "/api/therapist/exercises", exerciseData);
+      // Convert "all" to null for recommended exercises available to all patients
+      const apiData = {
+        ...exerciseData,
+        patientId: exerciseData.patientId === "all" ? null : exerciseData.patientId
+      };
+      const res = await apiRequest("POST", "/api/therapist/exercises", apiData);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/therapist/exercises"] });
       setIsExerciseModalOpen(false);
+      const isRecommended = variables.patientId === "all";
       toast({
         title: "Ćwiczenie utworzone!",
-        description: "Ćwiczenie zostało przypisane wybranemu pacjentowi.",
+        description: isRecommended 
+          ? "Ćwiczenie rekomendowane zostało utworzone i jest dostępne dla wszystkich pacjentów."
+          : "Ćwiczenie zostało przypisane wybranemu pacjentowi.",
       });
     },
     onError: () => {

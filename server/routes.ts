@@ -294,7 +294,7 @@ export function registerRoutes(app: Express): Server {
         const therapistExercise = await storage.getTherapistExercise(validatedData.exerciseId);
         const completionData = {
           ...validatedData,
-          abcSchemaId: therapistExercise?.abcSchemaId || null
+          abcSchemaId: therapistExercise?.abcSchemaId || undefined
         };
         const completion = await storage.createTherapistExerciseCompletion(completionData);
         res.status(201).json(completion);
@@ -306,7 +306,13 @@ export function registerRoutes(app: Express): Server {
           validatedData.effectiveness = Math.max(0, improvement / 7); // Normalize to 0-1 scale
         }
 
-        const completion = await storage.createExerciseCompletion(validatedData);
+        // Convert null to undefined for abcSchemaId to match expected type
+        const completionData = {
+          ...validatedData,
+          abcSchemaId: validatedData.abcSchemaId === null ? undefined : validatedData.abcSchemaId
+        };
+
+        const completion = await storage.createExerciseCompletion(completionData);
         res.status(201).json(completion);
       }
     } catch (error) {
@@ -576,17 +582,22 @@ export function registerRoutes(app: Express): Server {
       return res.sendStatus(403);
     }
     try {
-      // Verify patient is assigned to this therapist
-      const patients = await storage.getTherapistPatients(req.user!.id);
-      const patient = patients.find(p => p.id === req.body.patientId);
-      
-      if (!patient) {
-        return res.status(404).json({ message: "Patient not found or not assigned to you" });
+      // If patientId is provided, verify patient is assigned to this therapist
+      // If patientId is null/undefined, create a recommended exercise available to all patients
+      if (req.body.patientId) {
+        const patients = await storage.getTherapistPatients(req.user!.id);
+        const patient = patients.find(p => p.id === req.body.patientId);
+        
+        if (!patient) {
+          return res.status(404).json({ message: "Patient not found or not assigned to you" });
+        }
       }
 
       const validatedData = insertTherapistExerciseSchema.parse({
         ...req.body,
-        therapistId: req.user!.id
+        therapistId: req.user!.id,
+        // If patientId is not provided or empty, set to null for recommended exercises
+        patientId: req.body.patientId || null
       });
       
       const exercise = await storage.createTherapistExercise(validatedData);
