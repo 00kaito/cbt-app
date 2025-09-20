@@ -347,7 +347,7 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                             <Share className="h-4 w-4 mr-2" />
                             Udostępnij terapeucie
                           </DropdownMenuItem>
-                          */}
+                          **/}
                           <DropdownMenuItem
                             onClick={() => handleDelete(schema.id)}
                             className="text-destructive"
