@@ -610,52 +610,71 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                     <div className="space-y-3">
                       {patientExercises
                         .filter((ex) => ex.abcSchemaId === selectedSchema.id)
-                        .map((exercise) => (
-                          <div
-                            key={exercise.id}
-                            className="bg-accent/5 border border-accent/20 rounded p-3"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-foreground">
-                                  {exercise.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {exercise.description}
-                                </p>
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {exercise.category}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    ~{exercise.estimatedDuration} min
-                                  </span>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    {exercise.difficulty === "easy"
-                                      ? "Łatwy"
-                                      : exercise.difficulty === "medium"
-                                        ? "Średni"
-                                        : "Trudny"}
-                                  </Badge>
+                        .map((exercise) => {
+                          // Check if this exercise has been completed for this ABC schema
+                          const isCompleted = relatedExercises?.some(
+                            (completion) => completion.exerciseId === exercise.id
+                          );
+                          
+                          return (
+                            <div
+                              key={exercise.id}
+                              className={`${
+                                isCompleted 
+                                  ? "bg-green-50 border border-green-200" 
+                                  : "bg-accent/5 border border-accent/20"
+                              } rounded p-3`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-medium text-foreground">
+                                      {exercise.title}
+                                    </h4>
+                                    {isCompleted && (
+                                      <Badge variant="default" className="text-xs bg-green-600">
+                                        ✓ Wykonane
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {exercise.description}
+                                  </p>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {exercise.category}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      ~{exercise.estimatedDuration} min
+                                    </span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {exercise.difficulty === "easy"
+                                        ? "Łatwy"
+                                        : exercise.difficulty === "medium"
+                                          ? "Średni"
+                                          : "Trudny"}
+                                    </Badge>
+                                  </div>
                                 </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedExercise(exercise);
+                                    setExerciseModalOpen(true);
+                                  }}
+                                  className="ml-3"
+                                  variant={isCompleted ? "outline" : "default"}
+                                >
+                                  <ArrowRight className="h-4 w-4 mr-1" />
+                                  {isCompleted ? "Wykonaj ponownie" : "Wykonaj"}
+                                </Button>
                               </div>
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedExercise(exercise);
-                                  setExerciseModalOpen(true);
-                                }}
-                                className="ml-3"
-                              >
-                                <ArrowRight className="h-4 w-4 mr-1" />
-                                Wykonaj
-                              </Button>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   </div>
                 )}
