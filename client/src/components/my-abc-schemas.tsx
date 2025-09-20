@@ -343,11 +343,13 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                             )}
                             {analyzingSchemas.has(schema.id) ? "Analizowanie..." : "Analizuj AI"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleShare(schema.id)}>
+                          **/}
+                          <DropdownMenuItem
+                            onClick={() => handleShare(schema.id)}
+                          >
                             <Share className="h-4 w-4 mr-2" />
                             Udostępnij terapeucie
                           </DropdownMenuItem>
-                          **/}
                           <DropdownMenuItem
                             onClick={() => handleDelete(schema.id)}
                             className="text-destructive"
