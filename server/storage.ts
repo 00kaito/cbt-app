@@ -587,6 +587,22 @@ export class DatabaseStorage implements IStorage {
     return exercise || undefined;
   }
 
+  async getTherapistExercisesByAbcSchemaId(abcSchemaId: string): Promise<TherapistExercise[]> {
+    // Get all therapist exercises assigned to a specific ABC schema
+    const result = await db
+      .select()
+      .from(therapistExercises)
+      .where(
+        and(
+          eq(therapistExercises.abcSchemaId, abcSchemaId),
+          eq(therapistExercises.isActive, true)
+        )
+      )
+      .orderBy(desc(therapistExercises.createdAt));
+
+    return result;
+  }
+
   async createTherapistExercise(exercise: InsertTherapistExercise): Promise<TherapistExercise> {
     const [created] = await db
       .insert(therapistExercises)
