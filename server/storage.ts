@@ -325,6 +325,7 @@ export class DatabaseStorage implements IStorage {
           targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
           estimatedDuration: 15,
           difficulty: "medium",
+          isRecommended: true,
         },
         {
           id: "balanced-thinking",
@@ -335,6 +336,7 @@ export class DatabaseStorage implements IStorage {
           targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
           estimatedDuration: 10,
           difficulty: "easy",
+          isRecommended: true,
         },
         {
           id: "thought-challenging",
@@ -345,6 +347,7 @@ export class DatabaseStorage implements IStorage {
           targetDistortions: ["overgeneralization", "mind-reading"],
           estimatedDuration: 12,
           difficulty: "medium",
+          isRecommended: true,
         },
         {
           id: "mindfulness-exercise",
@@ -355,6 +358,7 @@ export class DatabaseStorage implements IStorage {
           targetDistortions: ["emotional-reasoning", "worry"],
           estimatedDuration: 10,
           difficulty: "easy",
+          isRecommended: true,
         },
       ];
     }
@@ -376,6 +380,7 @@ export class DatabaseStorage implements IStorage {
         targetDistortions: ["catastrophizing", "all-or-nothing-thinking"],
         estimatedDuration: 15,
         difficulty: "medium",
+        isRecommended: true,
       },
       {
         id: "balanced-thinking",
@@ -386,6 +391,7 @@ export class DatabaseStorage implements IStorage {
         targetDistortions: ["all-or-nothing-thinking", "mental-filter"],
         estimatedDuration: 10,
         difficulty: "easy",
+        isRecommended: true,
       },
       {
         id: "thought-challenging",
@@ -396,6 +402,7 @@ export class DatabaseStorage implements IStorage {
         targetDistortions: ["overgeneralization", "mind-reading"],
         estimatedDuration: 12,
         difficulty: "medium",
+        isRecommended: true,
       },
       {
         id: "mindfulness-exercise",
@@ -406,6 +413,7 @@ export class DatabaseStorage implements IStorage {
         targetDistortions: ["emotional-reasoning", "worry"],
         estimatedDuration: 10,
         difficulty: "easy",
+        isRecommended: true,
       },
     ];
 
