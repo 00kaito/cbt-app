@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AbcSchema, Exercise } from "@shared/schema";
+import { AbcSchema, Exercise, ExerciseCompletion, TherapistExercise } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -597,6 +597,88 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                 </div>
               )}
 
+              {/* Recommended Exercises */}
+              {patientExercises &&
+                patientExercises.filter((ex) => ex.abcSchemaId === null).length > 0 && (
+                  <div className="space-y-4 border-t pt-6">
+                    <h3 className="font-semibold text-foreground">
+                      Rekomendowane ćwiczenia
+                    </h3>
+                    <div className="space-y-3">
+                      {patientExercises
+                        .filter((ex) => ex.abcSchemaId === null)
+                        .map((exercise) => {
+                          // Check if this exercise has been completed for this ABC schema
+                          const isCompleted = relatedExercises?.some(
+                            (completion) => completion.exerciseId === exercise.id
+                          );
+                          
+                          return (
+                            <div
+                              key={exercise.id}
+                              className={`${
+                                isCompleted 
+                                  ? "bg-green-50 border border-green-200" 
+                                  : "bg-blue-50 border border-blue-200"
+                              } rounded p-3`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-medium text-foreground">
+                                      {exercise.title}
+                                    </h4>
+                                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                      Rekomendowane
+                                    </Badge>
+                                    {isCompleted && (
+                                      <Badge variant="default" className="text-xs bg-green-600">
+                                        ✓ Wykonane
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {exercise.description}
+                                  </p>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {exercise.category}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      ~{exercise.estimatedDuration} min
+                                    </span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {exercise.difficulty === "easy"
+                                        ? "Łatwy"
+                                        : exercise.difficulty === "medium"
+                                          ? "Średni"
+                                          : "Trudny"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedExercise(exercise);
+                                    setExerciseModalOpen(true);
+                                  }}
+                                  className="ml-3"
+                                  variant={isCompleted ? "outline" : "default"}
+                                >
+                                  <ArrowRight className="h-4 w-4 mr-1" />
+                                  {isCompleted ? "Wykonaj ponownie" : "Wykonaj"}
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
               {/* Assigned Exercises for this ABC */}
               {selectedSchema &&
                 patientExercises &&
@@ -605,7 +687,7 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
                 ).length > 0 && (
                   <div className="space-y-4 border-t pt-6">
                     <h3 className="font-semibold text-foreground">
-                      Ćwiczenia przypisane przez terapeutę
+                      Ćwiczenia przypisane przez terapeutę dla tego ABC
                     </h3>
                     <div className="space-y-3">
                       {patientExercises
