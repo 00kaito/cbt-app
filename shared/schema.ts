@@ -71,6 +71,7 @@ export const exercises = pgTable("exercises", {
   targetDistortions: text("target_distortions").array(),
   estimatedDuration: integer("estimated_duration"), // in minutes
   difficulty: text("difficulty").notNull(), // "easy", "medium", "hard"
+  isRecommended: boolean("is_recommended").default(false), // global recommended exercises
 });
 
 export const exerciseCompletions = pgTable("exercise_completions", {
