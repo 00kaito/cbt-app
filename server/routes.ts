@@ -650,6 +650,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get assigned therapist exercises for specific ABC schema
+  app.get("/api/abc-schemas/:id/assigned-exercises", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const abcSchemaId = req.params.id;
+      
+      // Verify ABC schema exists and user has access
+      const abcSchema = await storage.getAbcSchema(abcSchemaId);
+      
+      if (!abcSchema) {
+        return res.status(404).json({ message: "ABC schema not found" });
+      }
+
+      // For therapists, verify they have access to this ABC schema
+      if (req.user!.role === "therapist") {
+        // Get all patients for this therapist to check access
+        const patients = await storage.getTherapistPatients(req.user!.id);
+        const hasAccess = patients.some(patient => patient.id === abcSchema.userId);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Access denied to this ABC schema" });
+        }
+      } else {
+        // For patients, verify they own this ABC schema
+        if (abcSchema.userId !== req.user!.id) {
+          return res.status(403).json({ message: "Access denied to this ABC schema" });
+        }
+      }
+      
+      const assignedExercises = await storage.getTherapistExercisesByAbcSchemaId(abcSchemaId);
+      res.json(assignedExercises);
+    } catch (error) {
+      console.error("Error fetching assigned ABC exercises:", error);
+      res.status(500).json({ message: "Failed to fetch assigned ABC exercises" });
+    }
+  });
+
   // Get exercises assigned to current patient
   app.get("/api/patient/exercises", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
