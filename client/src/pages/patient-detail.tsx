@@ -62,7 +62,7 @@ export default function PatientDetail() {
     enabled: user?.role === "therapist" && !!patientId,
   });
   
-  const sharedSchemas = sharedData?.abcSchemas || [];
+  const sharedSchemas = (sharedData as any)?.abcSchemas || [];
 
   const handleViewAbcExercises = async (abcSchema: any) => {
     try {
@@ -120,7 +120,7 @@ export default function PatientDetail() {
     if (selectedAbcForExercise && patient) {
       createExerciseMutation.mutate({
         ...exerciseData,
-        patientId: patient.id,
+        patientId: (patient as any).id,
         abcSchemaId: selectedAbcForExercise.id,
       });
     }
@@ -194,7 +194,7 @@ export default function PatientDetail() {
               {patient.firstName} {patient.lastName}
             </h1>
             <p className="text-muted-foreground">
-              Patient ID: #{patient.id.slice(-6)}
+              Patient ID: #{(patient as any).id.slice(-6)}
             </p>
           </div>
         </div>
@@ -212,13 +212,13 @@ export default function PatientDetail() {
               <div>
                 <label className="text-sm font-medium text-foreground">Name</label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {patient.firstName} {patient.lastName}
+                  {(patient as any).firstName} {(patient as any).lastName}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Email</label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {patient.email}
+                  {(patient as any).email}
                 </p>
               </div>
               <div>
