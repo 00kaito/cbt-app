@@ -294,7 +294,8 @@ export function registerRoutes(app: Express): Server {
         const therapistExercise = await storage.getTherapistExercise(validatedData.exerciseId);
         const completionData = {
           ...validatedData,
-          abcSchemaId: therapistExercise?.abcSchemaId || undefined
+          // Use abcSchemaId from request body if available, otherwise use the one from therapist exercise
+          abcSchemaId: validatedData.abcSchemaId || therapistExercise?.abcSchemaId || undefined
         };
         const completion = await storage.createTherapistExerciseCompletion(completionData);
         res.status(201).json(completion);
