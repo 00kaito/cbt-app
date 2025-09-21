@@ -192,6 +192,12 @@ export default function MyAbcSchemas({ onEditSchema }: MyAbcSchemasProps) {
       queryClient.invalidateQueries({
         queryKey: ["/api/exercise-completions"],
       });
+      // Also invalidate ABC schema exercises if we're in a modal context
+      if (selectedSchema?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["/api/abc-schemas", selectedSchema.id, "exercises"],
+        });
+      }
       setExerciseModalOpen(false);
       setSelectedExercise(null);
       toast({
