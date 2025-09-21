@@ -195,17 +195,26 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/abc-schemas/:id/share", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
+      console.log("Share ABC Schema - Patient ID:", req.user!.id, "ABC Schema ID:", req.params.id);
+      
       // Get assigned therapists for the patient
       const therapists = await storage.getPatientTherapists(req.user!.id);
+      console.log("Found therapists:", therapists);
+      
       if (!therapists || therapists.length === 0) {
+        console.log("No therapist assigned - returning 400");
         return res.status(400).json({ message: "No therapist assigned" });
       }
 
       // Use first assigned therapist
       const therapistId = therapists[0].id;
+      console.log("Using therapist ID:", therapistId);
+      
       await storage.shareAbcSchemaWithTherapist(req.params.id, therapistId);
+      console.log("Successfully shared ABC schema");
       res.json({ message: "ABC schema shared with therapist" });
     } catch (error) {
+      console.error("Error sharing ABC schema:", error);
       res.status(500).json({ message: "Failed to share ABC schema" });
     }
   });
