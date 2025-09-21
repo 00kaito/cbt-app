@@ -688,7 +688,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    // Get shared ABC schemas
+    // Get shared ABC schemas (sorted by newest first)
     const sharedAbcSchemas = await db
       .select({ abcSchema: abcSchemas })
       .from(sharedData)
@@ -699,7 +699,8 @@ export class DatabaseStorage implements IStorage {
           eq(sharedData.patientId, patientId),
           eq(sharedData.dataType, "abc_schema")
         )
-      );
+      )
+      .orderBy(desc(abcSchemas.createdAt));
 
     // Get shared exercise completions
     const sharedExerciseCompletions = await db
