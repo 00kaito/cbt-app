@@ -29,6 +29,7 @@ export default function PatientDetail() {
   const queryClient = useQueryClient();
   const [selectedAbcSchema, setSelectedAbcSchema] = useState<any>(null);
   const [abcExercises, setAbcExercises] = useState<any[]>([]);
+  const [assignedAbcExercises, setAssignedAbcExercises] = useState<any[]>([]);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
   const [exerciseCreationModalOpen, setExerciseCreationModalOpen] = useState(false);
   const [selectedAbcForExercise, setSelectedAbcForExercise] = useState<any>(null);
@@ -65,15 +66,22 @@ export default function PatientDetail() {
 
   const handleViewAbcExercises = async (abcSchema: any) => {
     try {
-      const response = await fetch(`/api/abc-schemas/${abcSchema.id}/exercises`);
-      if (response.ok) {
-        const exercises = await response.json();
-        setAbcExercises(exercises);
+      // Fetch completed exercises
+      const completedResponse = await fetch(`/api/abc-schemas/${abcSchema.id}/exercises`);
+      // Fetch assigned exercises
+      const assignedResponse = await fetch(`/api/abc-schemas/${abcSchema.id}/assigned-exercises`);
+      
+      if (completedResponse.ok && assignedResponse.ok) {
+        const completedExercises = await completedResponse.json();
+        const assignedExercises = await assignedResponse.json();
+        
+        setAbcExercises(completedExercises);
+        setAssignedAbcExercises(assignedExercises);
         setSelectedAbcSchema(abcSchema);
         setExerciseModalOpen(true);
       }
     } catch (error) {
-      console.error("Failed to fetch related exercises:", error);
+      console.error("Failed to fetch ABC exercises:", error);
     }
   };
 
@@ -440,7 +448,7 @@ export default function PatientDetail() {
           <DialogHeader>
             <DialogTitle>Ćwiczenia powiązane z zapisem ABC</DialogTitle>
             <DialogDescription>
-              Ćwiczenia wykonane przez pacjenta w związku z tym zapisem myślowym
+              Ćwiczenia przypisane do tego zapisu ABC oraz te które zostały już wykonane
             </DialogDescription>
           </DialogHeader>
 
@@ -464,6 +472,69 @@ export default function PatientDetail() {
                   </div>
                 </div>
               </div>
+
+              {/* Pending Exercises */}
+              {assignedAbcExercises && assignedAbcExercises.length > 0 && (
+                <div className="space-y-4">
+                  {(() => {
+                    // Filter out exercises that have been completed
+                    const completedExerciseIds = abcExercises?.map(completion => completion.exerciseId) || [];
+                    const pendingExercises = assignedAbcExercises.filter(exercise => 
+                      !completedExerciseIds.includes(exercise.id)
+                    );
+
+                    if (pendingExercises.length === 0) return null;
+
+                    return (
+                      <>
+                        <h3 className="font-semibold text-foreground">Ćwiczenia oczekujące na wykonanie:</h3>
+                        {pendingExercises.map((exercise: any) => (
+                          <div key={exercise.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-foreground">{exercise.title}</h4>
+                                  <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
+                                    Nieukończone
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">{exercise.description}</p>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Przypisane: {format(new Date(exercise.createdAt), "dd.MM.yyyy", { locale: pl })}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="bg-muted/50 p-3 rounded">
+                                <p className="text-sm font-medium text-foreground mb-1">Instrukcje:</p>
+                                <p className="text-sm text-muted-foreground">{exercise.instructions}</p>
+                              </div>
+                              
+                              <div className="flex items-center space-x-4 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-muted-foreground">{exercise.estimatedDuration} min</span>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">
+                                  {exercise.category}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {exercise.difficulty === "easy" 
+                                    ? "Łatwy" 
+                                    : exercise.difficulty === "medium" 
+                                      ? "Średni" 
+                                      : "Trudny"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Related Exercises */}
               {abcExercises && abcExercises.length > 0 ? (
