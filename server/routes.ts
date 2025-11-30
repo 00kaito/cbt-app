@@ -413,17 +413,12 @@ export function registerRoutes(app: Express): Server {
     try {
       const { email } = req.body;
       
-      console.log("[DEBUG] Assign therapist request body:", req.body);
-      console.log("[DEBUG] Email received:", email, "Type:", typeof email);
-      
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
       }
 
       // Find therapist by email
       const therapist = await storage.getUserByEmail(email);
-      
-      console.log("[DEBUG] Therapist found:", therapist);
       
       if (!therapist) {
         return res.status(404).json({ message: "Therapist not found with this email address" });
