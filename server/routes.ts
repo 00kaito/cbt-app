@@ -623,6 +623,84 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Update therapist exercise
+  app.patch("/api/therapist/exercises/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const exerciseId = req.params.id;
+      
+      // Verify exercise exists and belongs to this therapist
+      const exercise = await storage.getTherapistExercise(exerciseId);
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      if (exercise.therapistId !== req.user!.id) {
+        return res.status(403).json({ message: "Not authorized to edit this exercise" });
+      }
+
+      // Normalize patientId: convert "all" or empty string to null for recommended exercises
+      const normalizedPatientId = (!req.body.patientId || req.body.patientId === "all" || req.body.patientId === "") 
+        ? null 
+        : req.body.patientId;
+
+      // If patientId is being changed to a specific patient, verify they're assigned to this therapist
+      if (normalizedPatientId !== null && normalizedPatientId !== exercise.patientId) {
+        const patients = await storage.getTherapistPatients(req.user!.id);
+        const patient = patients.find(p => p.id === normalizedPatientId);
+        
+        if (!patient) {
+          return res.status(403).json({ message: "Patient not found or not assigned to you" });
+        }
+      }
+
+      const updatedExercise = await storage.updateTherapistExercise(exerciseId, {
+        title: req.body.title,
+        description: req.body.description,
+        instructions: req.body.instructions,
+        category: req.body.category,
+        estimatedDuration: req.body.estimatedDuration,
+        difficulty: req.body.difficulty,
+        patientId: normalizedPatientId,
+      });
+      
+      res.json(updatedExercise);
+    } catch (error) {
+      console.error("Exercise update error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Failed to update exercise", details: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to update exercise" });
+      }
+    }
+  });
+
+  // Delete therapist exercise
+  app.delete("/api/therapist/exercises/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== "therapist") {
+      return res.sendStatus(403);
+    }
+    try {
+      const exerciseId = req.params.id;
+      
+      // Verify exercise exists and belongs to this therapist
+      const exercise = await storage.getTherapistExercise(exerciseId);
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      if (exercise.therapistId !== req.user!.id) {
+        return res.status(403).json({ message: "Not authorized to delete this exercise" });
+      }
+
+      await storage.deleteTherapistExercise(exerciseId);
+      res.json({ message: "Exercise deleted successfully" });
+    } catch (error) {
+      console.error("Exercise delete error:", error);
+      res.status(500).json({ message: "Failed to delete exercise" });
+    }
+  });
+
   // Get exercise completions for specific ABC schema (MUST be before the generic abc-schemas/:id route)
   app.get("/api/abc-schemas/:id/exercises", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

@@ -26,6 +26,8 @@ export default function TherapistDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<TherapistExercise | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<EnrichedPatientForTherapist | null>(null);
   const [selectedAbcSchema, setSelectedAbcSchema] = useState<AbcSchema | null>(null);
   const [abcModalOpen, setAbcModalOpen] = useState(false);
@@ -70,6 +72,65 @@ export default function TherapistDashboard() {
       });
     },
   });
+
+  const updateExerciseMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const apiData = {
+        ...data,
+        patientId: data.patientId === "all" ? null : data.patientId
+      };
+      const res = await apiRequest("PATCH", `/api/therapist/exercises/${id}`, apiData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/therapist/exercises"] });
+      setIsEditModalOpen(false);
+      setExerciseToEdit(null);
+      toast({
+        title: "Ćwiczenie zaktualizowane!",
+        description: "Zmiany zostały zapisane.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się zaktualizować ćwiczenia. Spróbuj ponownie.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteExerciseMutation = useMutation({
+    mutationFn: async (exerciseId: string) => {
+      const res = await apiRequest("DELETE", `/api/therapist/exercises/${exerciseId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/therapist/exercises"] });
+      toast({
+        title: "Ćwiczenie usunięte",
+        description: "Ćwiczenie zostało pomyślnie usunięte.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Błąd",
+        description: "Nie udało się usunąć ćwiczenia. Spróbuj ponownie.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditExercise = (exercise: TherapistExercise) => {
+    setExerciseToEdit(exercise);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteExercise = (exerciseId: string) => {
+    if (confirm("Czy na pewno chcesz usunąć to ćwiczenie?")) {
+      deleteExerciseMutation.mutate(exerciseId);
+    }
+  };
 
   const handleViewAbcSchemas = async (patient: User) => {
     try {
@@ -354,10 +415,21 @@ export default function TherapistDashboard() {
                             </p>
                           </div>
                           <div className="flex items-center space-x-1 ml-4">
-                            <Button variant="ghost" size="sm" data-testid={`button-edit-${exercise.id}`}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditExercise(exercise)}
+                              data-testid={`button-edit-${exercise.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" data-testid={`button-delete-${exercise.id}`}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteExercise(exercise.id)}
+                              disabled={deleteExerciseMutation.isPending}
+                              data-testid={`button-delete-${exercise.id}`}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -538,6 +610,164 @@ export default function TherapistDashboard() {
                 </div>
               )}
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Exercise Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsEditModalOpen(false);
+          setExerciseToEdit(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-edit-exercise">
+          <DialogHeader>
+            <DialogTitle>Edytuj ćwiczenie</DialogTitle>
+            <DialogDescription>
+              Zmień szczegóły ćwiczenia terapeutycznego.
+            </DialogDescription>
+          </DialogHeader>
+
+          {exerciseToEdit && (
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                updateExerciseMutation.mutate({
+                  id: exerciseToEdit.id,
+                  data: {
+                    title: formData.get('title'),
+                    description: formData.get('description'),
+                    instructions: formData.get('instructions'),
+                    category: formData.get('category'),
+                    estimatedDuration: parseInt(formData.get('estimatedDuration') as string) || 15,
+                    difficulty: formData.get('difficulty'),
+                    patientId: formData.get('patientId'),
+                  }
+                });
+              }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tytuł ćwiczenia</label>
+                <input
+                  name="title"
+                  defaultValue={exerciseToEdit.title}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="input-edit-title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Opis</label>
+                <textarea
+                  name="description"
+                  defaultValue={exerciseToEdit.description}
+                  rows={3}
+                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="textarea-edit-description"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Instrukcje</label>
+                <textarea
+                  name="instructions"
+                  defaultValue={exerciseToEdit.instructions}
+                  rows={4}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  data-testid="textarea-edit-instructions"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Kategoria</label>
+                  <select
+                    name="category"
+                    defaultValue={exerciseToEdit.category}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    data-testid="select-edit-category"
+                  >
+                    <option value="Kwestionowanie myśli">Kwestionowanie myśli</option>
+                    <option value="Restrukturyzacja poznawcza">Restrukturyzacja poznawcza</option>
+                    <option value="Uważność">Uważność</option>
+                    <option value="Relaksacja">Relaksacja</option>
+                    <option value="Aktywacja behawioralna">Aktywacja behawioralna</option>
+                    <option value="Terapia ekspozycyjna">Terapia ekspozycyjna</option>
+                    <option value="Inne">Inne</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Trudność</label>
+                  <select
+                    name="difficulty"
+                    defaultValue={exerciseToEdit.difficulty}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    data-testid="select-edit-difficulty"
+                  >
+                    <option value="easy">Łatwy</option>
+                    <option value="medium">Średni</option>
+                    <option value="hard">Trudny</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Przypisz ćwiczenie</label>
+                  <select
+                    name="patientId"
+                    defaultValue={exerciseToEdit.patientId || "all"}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    data-testid="select-edit-patient"
+                  >
+                    <option value="all">Wszyscy pacjenci (rekomendowane)</option>
+                    {patients?.map((patient) => (
+                      <option key={patient.id} value={patient.id}>
+                        {patient.firstName} {patient.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Czas trwania (minuty)</label>
+                  <input
+                    name="estimatedDuration"
+                    type="number"
+                    min={1}
+                    max={120}
+                    defaultValue={exerciseToEdit.estimatedDuration || 15}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    data-testid="input-edit-duration"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setExerciseToEdit(null);
+                  }}
+                  data-testid="button-cancel-edit"
+                >
+                  Anuluj
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateExerciseMutation.isPending}
+                  data-testid="button-save-edit"
+                >
+                  {updateExerciseMutation.isPending ? "Zapisywanie..." : "Zapisz zmiany"}
+                </Button>
+              </div>
+            </form>
           )}
         </DialogContent>
       </Dialog>

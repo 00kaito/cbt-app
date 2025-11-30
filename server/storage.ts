@@ -74,7 +74,7 @@ export interface IStorage {
   getPatientTherapists(patientId: string): Promise<User[]>;
   addTherapistPatient(relationship: InsertTherapistPatient): Promise<TherapistPatient>;
   removeTherapistPatient(patientId: string, therapistId: string): Promise<void>;
-  getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]>;
+  getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise; isTherapistExercise?: boolean })[]>;
 
   // Therapist exercise methods
   getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]>;
@@ -534,18 +534,38 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise })[]> {
-    const result = await db
+  async getPatientExerciseCompletionsForTherapist(patientId: string): Promise<(ExerciseCompletion & { exercise: Exercise | TherapistExercise; isTherapistExercise?: boolean })[]> {
+    // Fetch completions with regular exercises
+    const regularResult = await db
       .select()
       .from(exerciseCompletions)
       .innerJoin(exercises, eq(exerciseCompletions.exerciseId, exercises.id))
-      .where(eq(exerciseCompletions.userId, patientId))
-      .orderBy(desc(exerciseCompletions.completedAt));
+      .where(eq(exerciseCompletions.userId, patientId));
     
-    return result.map(row => ({
+    const regularCompletions = regularResult.map(row => ({
       ...row.exercise_completions,
-      exercise: row.exercises
+      exercise: row.exercises as Exercise,
+      isTherapistExercise: false
     }));
+
+    // Fetch completions with therapist exercises
+    const therapistResult = await db
+      .select()
+      .from(exerciseCompletions)
+      .innerJoin(therapistExercises, eq(exerciseCompletions.exerciseId, therapistExercises.id))
+      .where(eq(exerciseCompletions.userId, patientId));
+    
+    const therapistCompletions = therapistResult.map(row => ({
+      ...row.exercise_completions,
+      exercise: row.therapist_exercises as TherapistExercise,
+      isTherapistExercise: true
+    }));
+
+    // Combine and sort by completedAt
+    const allCompletions = [...regularCompletions, ...therapistCompletions];
+    allCompletions.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+    
+    return allCompletions;
   }
 
   async getTherapistExercisesForPatient(patientId: string): Promise<TherapistExercise[]> {
