@@ -16,7 +16,7 @@ export default function Settings() {
   const [therapistEmail, setTherapistEmail] = useState("");
 
   // Get current therapist assignments
-  const { data: assignedTherapists, refetch: refetchTherapists } = useQuery({
+  const { data: assignedTherapists, refetch: refetchTherapists } = useQuery<any[]>({
     queryKey: ["/api/patient/therapists"],
     enabled: user?.role === "patient",
   });
